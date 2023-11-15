@@ -83,7 +83,7 @@ export default {
                     {
                         min: 4,
                         max: 18,
-                        message: '用户名长度在4到18个字符',
+                        message: '密码长度在4到18个字符',
                         trigger: 'blur',
                     },
                 ],
@@ -113,8 +113,9 @@ export default {
                 } else {
                     // 报错
                     let err = ''
-                    err += obj.username[0].message
-                    err += ', ' + obj.password[0].message
+                    for (let key in obj) {
+                        err += obj[key][0].message + '  '
+                    }
                     Message({
                         message: err,
                         type: 'error',
