@@ -6,7 +6,9 @@ import '@/assets/css/main.css'
 import axios from 'axios'
 
 Vue.prototype.$http = axios
-axios.defaults.baseURL = 'https://api.example.com' // 默认值 默认的url头
+// axios.defaults.baseURL = 'http://127.0.0.1:8080/api/v1/' // 默认值 默认的url头
+// 同域无需写服务器地址+端口号
+axios.defaults.baseURL = '/api/v1/'
 
 Vue.config.productionTip = false
 

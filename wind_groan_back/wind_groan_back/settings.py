@@ -38,6 +38,8 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'App.apps.AppConfig',
+    'rest_framework_simplejwt',
+    'User',
 ]
 
 MIDDLEWARE = [
@@ -169,4 +171,21 @@ LOGGING = {
             'level': 'INFO',  # 日志器接收的最低日志级别
         },
     }
+}
+
+# DRF
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        # 'rest_framework.authentication.BasicAuthentication', # 这是一种认证方式
+        # 'rest_framework.authentication.SessionAuthentication', # 这也是一种认证方式
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ],
+    # 配置异常处理
+    'EXCEPTION_HANDLER': 'utils.exceptions.global_exception_handler'
+}
+
+# 配置token令牌保持时间
+from datetime import timedelta
+STMPLE_JWT = {
+    'ACCESS_TOKEN_LIFRTIME': timedelta(hours=1)
 }

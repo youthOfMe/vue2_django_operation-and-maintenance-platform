@@ -4,12 +4,7 @@
             <div class="avatar_box">
                 <img src="../assets/logo.png" alt="logo" />
             </div>
-            <el-form
-                class="login_form"
-                :model="loginForm"
-                :rules="loginRules"
-                ref="loginFormRef"
-            >
+            <el-form class="login_form" :model="loginForm" :rules="loginRules" ref="loginFormRef">
                 <el-form-item label="用户名" prop="username">
                     <el-input
                         ref="inputUsername"
@@ -30,18 +25,10 @@
                     ></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button
-                        type="primary"
-                        @click="login()"
-                        icon="el-icon-user"
-                    >
-                        登录
-                    </el-button>
+                    <el-button type="primary" @click="login()" icon="el-icon-user">登录</el-button>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="resetForm">
-                        联系小王同学
-                    </el-button>
+                    <el-button type="primary" @click="resetForm">联系小王同学</el-button>
                 </el-form-item>
             </el-form>
         </div>
@@ -49,7 +36,6 @@
 </template>
 
 <script>
-import { Message } from 'element-ui'
 export default {
     // data () { retun { xxx:yyy } }
     data() {
@@ -98,29 +84,36 @@ export default {
         login() {
             console.log('Niubi')
             // 发送数据到后台去, 要进行指定数据校验
-            this.$refs.loginFormRef.validate(async (valid, obj) => {
-                console.log(valid) // 返回布尔值 表示成功与否
-                console.log(obj) // 失败是返回失败规则
-                if (valid) {
-                    // 成功是怎么办 将数据发送到后端
-                    // 在这里this指向vue组件
-                    // this.$http.get() // axios
-                    const response = await this.$http
-                        .post('', this.loginForm)
-                        .then()
-                        .catch() // axios.post返回一个promise
-                    console.log(response, '______________')
-                } else {
-                    // 报错
-                    let err = ''
-                    for (let key in obj) {
-                        err += obj[key][0].message + '  '
-                    }
-                    Message({
-                        message: err,
-                        type: 'error',
-                    })
-                }
+            this.$refs.loginFormRef.validate((valid, obj) => {
+                valid
+                    ? (async () => {
+                          // 在这里this指向vue组件
+                          // this.$http.get() // axios
+                          // 使用axios配合await的时候不能使用then进行处理
+                          const { data: response } = await this.$http.post('login/', this.loginForm)
+                          !response.code
+                              ? (this.$message({
+                                    message: '认证成功 欢迎您管理员',
+                                    type: 'success',
+                                }) &&
+                                    window.localStorage.setItem('token', response.access)) ||
+                                this.$router.push('/home')
+                              : this.$message({
+                                    message: response.message,
+                                    type: 'error',
+                                })
+                      })()
+                    : (() => {
+                          // 报错
+                          let err = ''
+                          for (let key in obj) {
+                              err += obj[key][0].message + '  '
+                          }
+                          this.$message({
+                              message: err,
+                              type: 'error',
+                          })
+                      })()
             })
         },
         jump() {
