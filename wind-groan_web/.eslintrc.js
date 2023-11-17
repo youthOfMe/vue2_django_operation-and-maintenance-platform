@@ -33,6 +33,7 @@ module.exports = {
         'vue/attribute-hyphenation': 'off', // 对模板中的自定义组件强制执行属性命名样式
         'vue/no-deprecated-v-on-native-modifier': 'off',
         'no-unused-vars': 'off',
+        "vue/no-deprecated-slot-attribute": 'off'
 
         // 配置变量只声明不适应不报错
     },

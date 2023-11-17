@@ -1,27 +1,29 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
-import Login from '@/views/LoginVue'
-import Welcome from '@/views/WelcomeVue'
-import Home from '@/views/HomeVue.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
     {
         path: '/login',
-        component: Login,
+        component:() => import('@/views/WelcomeVue')
     },
     {
         path: '/',
         redirect: '/login',
     },
     {
-        path: '/welcome',
-        component: Welcome,
-    },
-    {
         path: '/home',
-        component: Home,
+        component: () => import('@/views/HomeVue.vue'),
+        redirect: '/welcome',
+        children: [
+            {
+                path: '/welcome', component:() => import('@/views/WelcomeVue')
+            },
+            {
+                path: '/users', component:() => import('@/views/user/UserView.vue')
+            },
+        ]
     },
 ]
 

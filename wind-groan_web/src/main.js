@@ -6,7 +6,23 @@ import '@/assets/css/main.css'
 import axios from 'axios'
 
 Vue.prototype.$http = axios
-// axios.defaults.baseURL = 'http://127.0.0.1:8080/api/v1/' // 默认值 默认的url头
+
+// 添加请求拦截器
+axios.interceptors.request.use((config) => {
+    config.headers['Authorization'] = 'Bearer' + ' ' + window.localStorage.getItem('token')
+    return config
+}, (err) => {
+    return Promise.reject(err)
+})
+
+// 添加响应拦截器
+axios.interceptors.response.use((response) => {
+    if(response.data && response.data.code < 100) return router.push('/login')
+    return response
+ })
+
+// 请求代理
+// axios.defaults.baseURL = 'http://127.0.0.1:8080/api/v1/' // 默认值 默认的url头 默认drf会进行 api的处理 接口都会使用这种路径
 // 同域无需写服务器地址+端口号
 axios.defaults.baseURL = '/api/v1/'
 

@@ -181,11 +181,15 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     # 配置异常处理
-    'EXCEPTION_HANDLER': 'utils.exceptions.global_exception_handler'
+    'EXCEPTION_HANDLER': 'utils.exceptions.global_exception_handler',
+    # 配置token权限类 验证token
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
 }
 
 # 配置token令牌保持时间
 from datetime import timedelta
-STMPLE_JWT = {
-    'ACCESS_TOKEN_LIFRTIME': timedelta(hours=1)
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1)
 }

@@ -14,10 +14,19 @@ class InvalidUsernameOrPassword(MagBaseException):
     code = 1
     message = '用户名或密码错误，请重新登录'
 
+class NotAuthenticated(MagBaseException):
+    code = 2
+    message = '认证失败, 请重新登录'
+
+class InvalidToken(MagBaseException):
+    code = 3
+    message = 'Toekn认证过期 请重新登录'
 
 # Django Drf异常类 我要做映射和替换
 exc_map = {
-    'AuthenticationFailed': InvalidUsernameOrPassword
+    'AuthenticationFailed': InvalidUsernameOrPassword,
+    'NotAuthenticated': NotAuthenticated,
+    'InvalidToken': InvalidToken,
 }
 
 
