@@ -20,6 +20,9 @@ import {
     Alert,
     Switch,
     Pagination,
+    Loading,
+    Tooltip,
+    MessageBox,
 } from 'element-ui'
 import { Card, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
@@ -44,6 +47,9 @@ Vue.use(TableColumn)
 Vue.use(Dialog)
 Vue.use(Switch)
 Vue.use(Pagination)
+Vue.use(Loading.directive)
+Vue.use(Tooltip)
 
-Vue.prototype.$message = Message
-Vue.prototype.$confirm = Alert
+Vue.prototype.$msgbox = Message
+Vue.prototype.$msgbox = MessageBox
+Vue.prototype.$confirm = MessageBox.confirm

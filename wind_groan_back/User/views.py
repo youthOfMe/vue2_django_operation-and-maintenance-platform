@@ -49,6 +49,21 @@ class UserViewSet(ModelViewSet):
     #     # 对queryset进行处理
     #     return queryset
 
+    # 重新更新函数 对patch和put都管用
+    # def update(self, request, *args, **kwargs):
+    #     pass
+
+    # 重写更新函数 只对patch管用
+    def partial_update(self, request, *args, **kwargs):
+        request.data.pop('username', None)
+        request.data.pop('password', None)
+        request.data.pop('id', None)
+
+        return super().partial_update(request, *args, **kwargs)
+
+    # 防止
+    # 1.
+
 
 
 # 必须登录了
@@ -114,6 +129,8 @@ def menulist_view(request):
 
     if request.user.is_superuser:
         itemA = MenuItem(0, '首页', '/welcome')
+        itemB = MenuItem(2, 'CMDB资产管理', '/welcome')
+        itemC = MenuItem(3, '堡垒机', '/welcome')
         item = MenuItem(1, '用户管理') # 管理员权限
         item.children.append(MenuItem(101, '用户列表', '/users'))
         item.children.append(MenuItem(102, '角色列表', '/users/roles'))
@@ -121,5 +138,7 @@ def menulist_view(request):
 
         menulist.append(itemA)
         menulist.append(item)
+        menulist.append(itemB)
+        menulist.append(itemC)
 
     return Response(menulist)

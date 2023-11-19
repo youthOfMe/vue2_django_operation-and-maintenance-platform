@@ -202,5 +202,5 @@ REST_FRAMEWORK = {
 # 配置token令牌保持时间
 from datetime import timedelta
 SIMPLE_JWT = {
-    'ACCESS_TOKEN_LIFETIME': timedelta(hours=1)
+    'ACCESS_TOKEN_LIFETIME': timedelta(hours=3)
 }

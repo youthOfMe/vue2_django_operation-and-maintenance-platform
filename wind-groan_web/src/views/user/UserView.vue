@@ -21,7 +21,16 @@
                     <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
                 </el-col>
             </el-row>
-            <el-table :data="dataList" style="width: 100%" :border="true" stripe>
+            <el-table
+                :data="dataList"
+                style="width: 100%"
+                :border="true"
+                stripe
+                v-loading="loading"
+                element-loading-text="拼命加载中"
+                element-loading-spinner="el-icon-loading"
+                element-loading-background="rgba(0, 0, 0, 0.8)"
+            >
                 <el-table-column prop="id" label="用户ID"></el-table-column>
                 <el-table-column prop="username" label="用户名"></el-table-column>
                 <el-table-column prop="email" label="邮箱"></el-table-column>
@@ -46,9 +55,22 @@
                     </template>
                 </el-table-column>
                 <el-table-column label="操作" fixed="right">
-                    <template>
-                        <el-button size="small" icon="el-icon-edit"></el-button>
-                        <el-button type="danger" size="small" icon="el-icon-delete"></el-button>
+                    <template #default="{ row }">
+                        <el-tooltip content="编辑" placement="bottom" effect="light">
+                            <el-button
+                                size="small"
+                                icon="el-icon-edit"
+                                @click="handleEdit(row)"
+                            ></el-button>
+                        </el-tooltip>
+                        <el-tooltip content="删除" placement="bottom" effect="light">
+                            <el-button
+                                type="danger"
+                                size="small"
+                                icon="el-icon-delete"
+                                @click="handleDelete(row.id)"
+                            ></el-button>
+                        </el-tooltip>
                     </template>
                 </el-table-column>
             </el-table>
@@ -61,11 +83,12 @@
                 :total="pagination.total"
             ></el-pagination>
         </el-card>
+        <!-- 增加用户 -->
         <el-dialog
             title="创建肖学长"
             :visible.sync="addDialogVisible"
             width="50%"
-            :before-close="handleClose"
+            :before-close="addHandleClose"
         >
             <el-form
                 :model="addForm"
@@ -94,8 +117,39 @@
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button @click="handleClose">取 消</el-button>
+                <el-button @click="addHandleClose">取 消</el-button>
                 <el-button type="primary" @click="addDialogVisible = false || add()">
+                    确 定
+                </el-button>
+            </span>
+        </el-dialog>
+        <!-- 修改用户 -->
+        <el-dialog
+            title="修改肖学长"
+            :visible.sync="editDialogVisible"
+            width="50%"
+            :before-close="editHandleClose"
+        >
+            <el-form
+                :model="editForm"
+                :rules="editRules"
+                ref="edit"
+                labal-width="100px"
+                class="demo-ruleForm"
+            >
+                <el-form-item label="邮箱" prop="email">
+                    <el-input v-model="editForm.email"></el-input>
+                </el-form-item>
+                <el-form-item label="联系电话" prop="phone">
+                    <el-input v-model="editForm.phone"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="resetForm()">重置</el-button>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="editHandleClose">取 消</el-button>
+                <el-button type="primary" @click="editDialogVisible = false || edit()">
                     确 定
                 </el-button>
             </span>
@@ -115,30 +169,11 @@ export default {
         }
 
         return {
+            // 数据加载
+            loading: false,
             // 搜索框绑定数据
             username: '',
-            dataList: [
-                {
-                    date: '2016-05-02',
-                    name: '王小虎',
-                    address: '上海市普陀区金沙江路 1518 弄',
-                },
-                {
-                    date: '2016-05-04',
-                    name: '王小虎',
-                    address: '上海市普陀区金沙江路 1517 弄',
-                },
-                {
-                    date: '2016-05-01',
-                    name: '王小虎',
-                    address: '上海市普陀区金沙江路 1519 弄',
-                },
-                {
-                    date: '2016-05-03',
-                    name: '王小虎',
-                    address: '上海市普陀区金沙江路 1516 弄',
-                },
-            ],
+            dataList: [],
             // 新增
             addDialogVisible: false,
             addForm: {
@@ -149,6 +184,28 @@ export default {
                 phone: '',
             },
             addRules: {
+                username: [
+                    { required: true, message: '请输入用户名称', trigger: 'blur' },
+                    { min: 4, max: 16, message: '用户名长度在 4 到 16 个字符', trigger: 'blur' },
+                ],
+                password: [
+                    { required: true, message: '请输入用户密码', trigger: 'blur' },
+                    { min: 4, max: 16, message: '密码长度在 4 到 16 个字符', trigger: 'blur' },
+                ],
+                checkPass: [
+                    { required: true, message: '请再次输入用户密码', trigger: 'blur' },
+                    { min: 4, max: 16, message: '密码长度在 4 到 16 个字符', trigger: 'blur' },
+                    { validator: validatePass, trigger: 'blur' },
+                ],
+            },
+            // 新增
+            editDialogVisible: false,
+            editForm: {
+                id: '',
+                email: '',
+                phone: '',
+            },
+            editRules: {
                 username: [
                     { required: true, message: '请输入用户名称', trigger: 'blur' },
                     { min: 4, max: 16, message: '用户名长度在 4 到 16 个字符', trigger: 'blur' },
@@ -178,7 +235,7 @@ export default {
             this.$refs['add'].resetFields()
         },
         // 关闭输入框前提示
-        handleClose() {
+        addHandleClose() {
             MessageBox.alert('取消后会导致当前填写的数据消失', '提示', {
                 confirmButtonText: '确定',
                 cancelButtonText: '取消',
@@ -187,6 +244,23 @@ export default {
                 .then(() => {
                     this.resetForm()
                     this.addDialogVisible = false
+                    this.$message({
+                        type: 'info',
+                        message: '已取消',
+                    })
+                })
+                .catch(() => {})
+        },
+        // 关闭输入框前提示
+        editHandleClose() {
+            MessageBox.alert('取消后会导致当前填写的数据消失', '提示', {
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'warning',
+            })
+                .then(() => {
+                    this.resetForm()
+                    this.editDialogVisible = false
                     this.$message({
                         type: 'info',
                         message: '已取消',
@@ -208,8 +282,27 @@ export default {
                 this.getList()
             })
         },
+        // 编辑用户数据
+        handleEdit(row) {
+            console.log(row)
+            const { id, username, email, phone } = row
+            this.editForm = { id, username, email, phone }
+            this.editDialogVisible = true
+        },
+        edit() {
+            const { id } = this.editForm
+            this.$refs['edit'].validate(async (valid) => {
+                if (valid) {
+                    const { data: response } = await this.$http.patch(`users/${id}/`, this.editForm)
+                    if (response.code) return this.$message.error(response.message)
+                    this.editDialogVisible = false
+                    this.getList(this.pagination.page)
+                }
+            })
+        },
         // 获取用户列表数据
         async getList(page = 1) {
+            this.loading = true
             if (typeof page !== 'number' || page <= 0) {
                 page = 1
             }
@@ -230,6 +323,8 @@ export default {
                     type: 'error',
                     message: '用户未激活',
                 })
+            } finally {
+                this.loading = false
             }
         },
         // 调整用户激活状态
@@ -242,7 +337,26 @@ export default {
             if (response.code) return this.$message.error(response.message)
             this.getList(this.pagination.page)
         },
-        async handleSearch(page = 1) {},
+        // 删除用户数据
+        handleDelete(id) {
+            this.$confirm('此操作将永久删除该用户, 是否继续', '警告', {
+                distinguishCancelAndClose: true,
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'error',
+            })
+                .then(async () => {
+                    const { data: response } = await this.$delete(`users/${id}/`)
+                    if (response.code) return this.$message.error(response.message)
+                    this.getList(this.pagination.page)
+                })
+                .catch((action) => {
+                    this.$msgbox({
+                        type: 'info',
+                        message: '已取消',
+                    })
+                })
+        },
     },
 }
 </script>
