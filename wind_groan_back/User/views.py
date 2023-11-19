@@ -1,15 +1,55 @@
+import django_filters.rest_framework
 from django.contrib.auth.models import User
 from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.backends import ModelBackend
 from django.http.response import HttpResponse
+from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 from rest_framework.decorators import api_view, permission_classes
+from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
+
+from User.models import UserProfile
+from User.serializers import UserSerializer
+
+
+class UserViewSet(ModelViewSet):
+    queryset = UserProfile.objects.all()
+    serializer_class = UserSerializer
+
+    # filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
+    # filterset_fields = ['username'] # 严格等于 多个条件是and
+    # filter_backends = [SearchFilter]
+    search_fields = ['username', 'email'] # 指定在哪些字段进行模糊搜索
+
+    # 权限
+    # permission_classers = [IsAdminUser] # 必须是管理员
+    # 1. 覆盖分页list方法 只影响查询列表功能 但是这样要对查询完的结果再进行修改很麻烦
+    # 在此进行重写list函数 可在收到查询结果前进行得到结果
+    # def list(self, request, *args, **kwargs):
+    #     queryset = super().get_queryset()
+    #     username = request.query_params.get('username', None)
+    #     if username:
+    #         queryset = queryset.filter(username__icontains=username)
+    #     page = self.paginate_queryset(queryset)
+    #     if page is not None:
+    #         serializer = self.get_serializer(page, many=True)
+    #         return self.get_paginated_response(serializer.data)
+    #
+    #     serializer = self.get_serializer(queryset, many=True)
+    #     return Response(serializer.data)
+    # 2. 重写这个方法 对全局查询有影响
+    # def get_queryset(self):
+    #     queryset = super().get_queryset()
+    #     # 对queryset进行处理
+    #     return queryset
+
+
 
 # 必须登录了
 # @login_required
@@ -73,11 +113,13 @@ def menulist_view(request):
     menulist = []
 
     if request.user.is_superuser:
+        itemA = MenuItem(0, '首页', '/welcome')
         item = MenuItem(1, '用户管理') # 管理员权限
         item.children.append(MenuItem(101, '用户列表', '/users'))
         item.children.append(MenuItem(102, '角色列表', '/users/roles'))
         item + MenuItem(103, '权限列表', '/users/')
 
+        menulist.append(itemA)
         menulist.append(item)
 
     return Response(menulist)

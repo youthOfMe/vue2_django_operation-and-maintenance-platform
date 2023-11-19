@@ -12,6 +12,8 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 import os
 from pathlib import Path
 
+import django_filters
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -40,6 +42,7 @@ INSTALLED_APPS = [
     'App.apps.AppConfig',
     'rest_framework_simplejwt',
     'User',
+    'django_filters',
 ]
 
 MIDDLEWARE = [
@@ -76,6 +79,8 @@ WSGI_APPLICATION = 'wind_groan_back.wsgi.application'
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
+
+AUTH_USER_MODEL = 'User.UserProfile' # 告诉django用我自己的用户Model
 
 DATABASES = {
     'default': {
@@ -184,8 +189,14 @@ REST_FRAMEWORK = {
     'EXCEPTION_HANDLER': 'utils.exceptions.global_exception_handler',
     # 配置token权限类 验证token
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.IsAuthenticated', # 激活了就能登录 不必是管理员
     ],
+    # 配置默认分页器
+    'DEFAULT_PAGINATION_CLASS': 'utils.paginations.PageNumberPagination',
+    'PAGE_SIZE': 10,
+     # 配置全局过滤器 严格查询和模糊查询
+    'DEFAULT_FILTER_BACKENDS': ['django_filters.rest_framework.DjangoFilterBackend',
+                                'rest_framework.filters.SearchFilter']
 }
 
 # 配置token令牌保持时间

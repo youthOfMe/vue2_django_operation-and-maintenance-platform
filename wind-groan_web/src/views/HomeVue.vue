@@ -2,36 +2,54 @@
     <el-container>
         <el-header>
             <div class="logo">
-                <img src="../assets/logo.png" alt="logo">
+                <img src="../assets/logo.png" alt="logo" />
                 <div class="title">风吟运维管理平台</div>
-                <i :class="isCollapse ? 'el-icon-s-unfold' : 'el-icon-s-fold'" @click="isCollapse = !isCollapse"></i>
+                <i
+                    :class="isCollapse ? 'el-icon-s-unfold' : 'el-icon-s-fold'"
+                    @click="isCollapse = !isCollapse"
+                ></i>
             </div>
             <div class="info">
-                <el-button type='primary' @click="logout">退出</el-button>
+                <el-button type="primary" @click="logout">退出</el-button>
             </div>
         </el-header>
         <el-container>
             <el-aside :width="isCollapse ? '64px' : '200px'">
                 <el-menu
                     router
-                    default-active="2"
                     class="el-menu-vertical-demo"
                     background-color="#ffffff"
                     text-color="#123"
                     active-text-color="#ffd04b"
                     :collapse="isCollapse"
                 >
-                <el-submenu :index="item.id + ''" v-for="item in menuList" :key="item.id">
-                    <template slot="title">
-                        <i class="el-icon-location"></i>
-                        <span>{{ item.name }}</span>
+                    <template v-for="item in menuList">
+                        <template v-if="item.children.length">
+                            <el-submenu :index="item.id + ''" :key="item.id">
+                                <template slot="title">
+                                    <i class="el-icon-location"></i>
+                                    <span>{{ item.name }}</span>
+                                </template>
+                                <el-menu-item
+                                    :index="sub.path"
+                                    v-for="sub in item.children"
+                                    :key="sub.id"
+                                >
+                                    {{ sub.name }}
+                                </el-menu-item>
+                            </el-submenu>
+                        </template>
+                        <template v-else>
+                            <el-menu-item :index="item.path" :key="item.id">
+                                <i class="el-icon-s-home"></i>
+                                <span slot="title">{{ item.name }}</span>
+                            </el-menu-item>
+                        </template>
                     </template>
-                    <el-menu-item :index="sub.path" v-for="sub in item.children" :key="sub.id">{{ sub.name }}</el-menu-item>
-                </el-submenu>
-                <el-menu-item index="2">
-                    <i class="el-icon-menu"></i>
-                    <span slot="title">导航二</span>
-                </el-menu-item>
+                    <el-menu-item index="2">
+                        <i class="el-icon-menu"></i>
+                        <span slot="title">导航二</span>
+                    </el-menu-item>
                 </el-menu>
             </el-aside>
             <el-main>
@@ -56,7 +74,7 @@ export default {
                 // ] },
                 // { id: 2, name: 'test2', children: [] }
             ],
-            isCollapse: true
+            isCollapse: false,
         }
     },
     methods: {
@@ -64,10 +82,10 @@ export default {
             window.localStorage.removeItem('token') || this.$router.push('/login')
         },
         async getMenuList() {
-            const {data: response} = await this.$http.get('/user/menulist/')
+            const { data: response } = await this.$http.get('/users/menulist/')
             this.menuList = response
         },
-    }
+    },
 }
 </script>
 

@@ -25,10 +25,7 @@
                     ></el-input>
                 </el-form-item>
                 <el-form-item>
-                    <el-button type="primary" @click="login()" icon="el-icon-user">登录</el-button>
-                </el-form-item>
-                <el-form-item>
-                    <el-button type="primary" @click="resetForm">联系小王同学</el-button>
+                    <el-button type="primary" @click="login" icon="el-icon-user">登录</el-button>
                 </el-form-item>
             </el-form>
         </div>

@@ -6,7 +6,7 @@ Vue.use(VueRouter)
 const routes = [
     {
         path: '/login',
-        component:() => import('@/views/WelcomeVue')
+        component: () => import('@/views/LoginVue'),
     },
     {
         path: '/',
@@ -18,12 +18,14 @@ const routes = [
         redirect: '/welcome',
         children: [
             {
-                path: '/welcome', component:() => import('@/views/WelcomeVue')
+                path: '/welcome',
+                component: () => import('@/views/WelcomeVue'),
             },
             {
-                path: '/users', component:() => import('@/views/user/UserView.vue')
+                path: '/users',
+                component: () => import('@/views/user/UserView.vue'),
             },
-        ]
+        ],
     },
 ]
 
@@ -39,5 +41,21 @@ router.beforeEach((to, from, next) => {
               token ? next() : next('/login')
           })()
 })
+
+// 获取原型对象push函数
+const originalPush = VueRouter.prototype.push
+
+// 获取原型对象replace函数
+const originalReplace = VueRouter.prototype.replace
+
+// 修改原型对象中的push函数
+VueRouter.prototype.push = function push(location) {
+    return originalPush.call(this, location).catch((err) => err)
+}
+
+// 修改原型对象中的replace函数
+VueRouter.prototype.replace = function replace(location) {
+    return originalReplace.call(this, location).catch((err) => err)
+}
 
 export default router
