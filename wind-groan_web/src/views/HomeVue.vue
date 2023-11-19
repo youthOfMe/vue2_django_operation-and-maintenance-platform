@@ -29,35 +29,33 @@
             <!-- 修改密码 -->
             <el-dialog
                 :title="`修改${user.username}密码`"
-                :visible.sync="chpwDialogVisible"
+                :visible.sync="chpwdDialogVisible"
                 width="50%"
-                :before-close="chpwHandleClose"
+                :before-close="chpwdHandleClose"
             >
                 <el-form
-                    :model="chpwForm"
-                    :rules="chpwRules"
-                    ref="chpw"
+                    :model="chpwdForm"
+                    :rules="chpwdRules"
+                    ref="chpwd"
                     labal-width="100px"
                     class="demo-ruleForm"
                 >
                     <el-form-item label="原始密码" prop="oldPassword">
-                        <el-input type="password" v-model="chpwForm.oldPassword"></el-input>
+                        <el-input type="password" v-model="chpwdForm.oldPassword"></el-input>
                     </el-form-item>
                     <el-form-item label="密码" prop="password">
-                        <el-input type="password" v-model="chpwForm.password"></el-input>
+                        <el-input type="password" v-model="chpwdForm.password"></el-input>
                     </el-form-item>
                     <el-form-item label="确认密码" prop="checkPass">
-                        <el-input v-model="chpwForm.checkPass"></el-input>
+                        <el-input type="password" v-model="chpwdForm.checkPass"></el-input>
                     </el-form-item>
                     <el-form-item>
                         <el-button @click="resetForm()">重置</el-button>
                     </el-form-item>
                 </el-form>
                 <span slot="footer" class="dialog-footer">
-                    <el-button @click="chpwHandleClose">取 消</el-button>
-                    <el-button type="primary" @click="chpwDialogVisible = false || edit()">
-                        确 定
-                    </el-button>
+                    <el-button @click="chpwdHandleClose">取 消</el-button>
+                    <el-button type="primary" @click="chpwd()">确 定</el-button>
                 </span>
             </el-dialog>
         </el-header>
@@ -117,7 +115,9 @@ export default {
     },
     data() {
         const validatePass = (rule, value, callback) => {
-            value !== this.addForm.password ? callback(new Error('两次密码输入不一致')) : callback()
+            value !== this.chpwdForm.password
+                ? callback(new Error('两次密码输入不一致'))
+                : callback()
         }
 
         return {
@@ -127,13 +127,13 @@ export default {
             // 显示用户
             user: {},
             // 修改密码
-            chpwDialogVisible: false,
-            chpwForm: {
+            chpwdDialogVisible: false,
+            chpwdForm: {
                 oldPassword: '',
                 password: '',
                 checkPass: '',
             },
-            chpwRules: {
+            chpwdRules: {
                 oldPassword: [
                     { required: true, message: '请输入用户密码', trigger: 'blur' },
                     { min: 4, max: 16, message: '密码长度在 4 到 16 个字符', trigger: 'blur' },
@@ -174,12 +174,25 @@ export default {
         handleCommand(command) {
             console.log(command, typeof command)
             if (command === 'logout') this.logout()
-            if (command === 'chpwd') this.chpwDialogVisible = true
+            if (command === 'chpwd') this.chpwdDialogVisible = true
         },
         // 修改密码
-        chpw() {},
+        chpwd() {
+            const name = 'chpwd'
+            const { id } = this.user
+            this.$refs[name].validate(async (valid) => {
+                if (valid) {
+                    const { data: response } = await this.$http.patch(
+                        `users/${id}/chpwd/`,
+                        this.chpwdForm,
+                    )
+                    if (response.code) return this.$message.error(response.message)
+                    this.$message.success('当前用户密码修改成功')
+                }
+            })
+        },
         // 关闭输入框前提示
-        chpwHandleClose() {
+        chpwdHandleClose() {
             this.$msgbox
                 .alert('取消后会导致当前填写的数据消失', '提示', {
                     confirmButtonText: '确定',
@@ -187,8 +200,8 @@ export default {
                     type: 'warning',
                 })
                 .then(() => {
-                    this.resetForm('chpw')
-                    this.chpwDialogVisible = false
+                    this.resetForm('chpwd')
+                    this.chpwdDialogVisible = false
                     this.$message({
                         type: 'info',
                         message: '已取消',

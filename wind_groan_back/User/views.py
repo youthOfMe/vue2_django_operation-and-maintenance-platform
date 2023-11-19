@@ -15,7 +15,8 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from User.models import UserProfile
-from User.serializers import UserSerializer
+from User.serializers import UserSerializer, PwdSerializer
+from utils.exceptions import InvalidPassword
 
 
 class UserViewSet(ModelViewSet):
@@ -51,12 +52,29 @@ class UserViewSet(ModelViewSet):
 
     # 如果想自定义增删改查就使用这个方法
     # 默认路由地址 users/w/
+    # 查询登录的用户信息
     @action(detail=False, url_path='whoami') #  是否是详情 detail为True 参数至少要有pk
     def w(self, request):
         return Response({
             'id': request.user.id,
             'username': request.user.username
         })
+
+    # 进行修改密码
+    @action(['PATCH'], detail=True, url_path='chpwd')
+    def chpwd(self, request, pk=None):
+        user = request.user
+        old = request.data.get('oldPassword', '')
+        # serializer = PwdSerializer()
+        if user.check_password(old):
+            user.set_password(request.data.get('password', ''))
+            user.save()
+        else:
+            raise InvalidPassword
+
+        return Response()
+
+    # 进行编写重置密码
 
     # 重新更新函数 对patch和put都管用
     # def update(self, request, *args, **kwargs):

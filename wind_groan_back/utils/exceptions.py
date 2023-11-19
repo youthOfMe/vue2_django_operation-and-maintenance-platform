@@ -22,6 +22,11 @@ class InvalidToken(MagBaseException):
     code = 3
     message = 'Toekn认证过期 请重新登录'
 
+# code <= 100 就重新登录
+class InvalidPassword(MagBaseException):
+    code = 101
+    message = '原密码校验失败 请重新输入'
+
 # Django Drf异常类 我要做映射和替换
 exc_map = {
     'AuthenticationFailed': InvalidUsernameOrPassword,

@@ -157,7 +157,7 @@ LOGGING = {
             'level': 'INFO',
             'filters': ['require_debug_true'],
             'class': 'logging.StreamHandler',
-            'formatter': 'simple'
+            'formatter': 'simple',
         },
         'file': {  # 向文件中输出日志
             'level': 'INFO',
@@ -165,7 +165,8 @@ LOGGING = {
             'filename': os.path.join(BASE_DIR, 'logs/wind_groan.log'),  # 日志文件的位置
             'maxBytes': 300 * 1024 * 1024,
             'backupCount': 10,
-            'formatter': 'verbose'
+            'formatter': 'verbose',
+            'encoding': 'utf-8'
         },
     },
     'loggers': {  # 日志器

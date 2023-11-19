@@ -20,7 +20,7 @@ axios.interceptors.request.use(
 
 // 添加响应拦截器
 axios.interceptors.response.use((response) => {
-    if (response.data && response.data.code < 100) router.push('/login')
+    if (response.data && response.data.code <= 100) router.push('/login')
     return response
 })
 

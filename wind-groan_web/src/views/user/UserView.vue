@@ -293,7 +293,10 @@ export default {
             const { id } = this.editForm
             this.$refs['edit'].validate(async (valid) => {
                 if (valid) {
-                    const { data: response } = await this.$http.patch(`users/${id}/`, this.editForm)
+                    const { data: response } = await this.$http.patch(
+                        `users/${id}/chpw`,
+                        this.editForm,
+                    )
                     if (response.code) return this.$message.error(response.message)
                     this.editDialogVisible = false
                     this.getList(this.pagination.page)

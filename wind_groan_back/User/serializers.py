@@ -23,4 +23,19 @@ class UserSerializer(serializers.ModelSerializer):
             return make_password(value)
         raise serializers.ValidationError('The length og password')
 
-print(UserSerializer(), '~~~~~~~~~~~~~~~~~~~~~~!!!!!!!!!!!!!!!!!!!')
+# 可以在这里进行校验密码
+class PwdSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = [
+            'password'
+        ]
+        extra_kwargs = {
+            'password': {'write_only': True}
+        }
+
+    def validate_password(self, value):
+        # 使用正则进行分析 密码的强弱
+        if 4 <= len(value) <= 16:
+            return make_password(value)
+        raise serializers.ValidationError('The length og password')
