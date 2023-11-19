@@ -11,7 +11,55 @@
             </div>
             <div class="info">
                 <el-button type="primary" @click="logout">退出</el-button>
+                <el-dropdown @command="handleCommand">
+                    <span class="el-dropdown-link">
+                        {{ user.username }}
+                        <i class="el-icon-arrow-down el-icon--right"></i>
+                    </span>
+                    <el-dropdown-menu slot="dropdown">
+                        <el-dropdown-item icon="el-icon-check" command="chpwd">
+                            修改密码
+                        </el-dropdown-item>
+                        <el-dropdown-item icon="el-icon-circle-check" divided command="logout">
+                            退出
+                        </el-dropdown-item>
+                    </el-dropdown-menu>
+                </el-dropdown>
             </div>
+            <!-- 修改密码 -->
+            <el-dialog
+                :title="`修改${user.username}密码`"
+                :visible.sync="chpwDialogVisible"
+                width="50%"
+                :before-close="chpwHandleClose"
+            >
+                <el-form
+                    :model="chpwForm"
+                    :rules="chpwRules"
+                    ref="chpw"
+                    labal-width="100px"
+                    class="demo-ruleForm"
+                >
+                    <el-form-item label="原始密码" prop="oldPassword">
+                        <el-input type="password" v-model="chpwForm.oldPassword"></el-input>
+                    </el-form-item>
+                    <el-form-item label="密码" prop="password">
+                        <el-input type="password" v-model="chpwForm.password"></el-input>
+                    </el-form-item>
+                    <el-form-item label="确认密码" prop="checkPass">
+                        <el-input v-model="chpwForm.checkPass"></el-input>
+                    </el-form-item>
+                    <el-form-item>
+                        <el-button @click="resetForm()">重置</el-button>
+                    </el-form-item>
+                </el-form>
+                <span slot="footer" class="dialog-footer">
+                    <el-button @click="chpwHandleClose">取 消</el-button>
+                    <el-button type="primary" @click="chpwDialogVisible = false || edit()">
+                        确 定
+                    </el-button>
+                </span>
+            </el-dialog>
         </el-header>
         <el-container>
             <el-aside :width="isCollapse ? '64px' : '200px'">
@@ -65,26 +113,88 @@ export default {
     created() {
         // 生命周期钩子函数 该组件js内存中的实例对象被创建出来
         this.getMenuList()
+        this.getUserInfo()
     },
     data() {
+        const validatePass = (rule, value, callback) => {
+            value !== this.addForm.password ? callback(new Error('两次密码输入不一致')) : callback()
+        }
+
         return {
-            menuList: [
-                // { id: 1, name: 'test1', children: [
-                //     { id: 101, name: 'test101' },
-                //     { id: 102, name: 'test102' },
-                // ] },
-                // { id: 2, name: 'test2', children: [] }
-            ],
+            // 导航栏数据
+            menuList: [],
             isCollapse: false,
+            // 显示用户
+            user: {},
+            // 修改密码
+            chpwDialogVisible: false,
+            chpwForm: {
+                oldPassword: '',
+                password: '',
+                checkPass: '',
+            },
+            chpwRules: {
+                oldPassword: [
+                    { required: true, message: '请输入用户密码', trigger: 'blur' },
+                    { min: 4, max: 16, message: '密码长度在 4 到 16 个字符', trigger: 'blur' },
+                ],
+                password: [
+                    { required: true, message: '请输入用户新密码', trigger: 'blur' },
+                    { min: 4, max: 16, message: '密码长度在 4 到 16 个字符', trigger: 'blur' },
+                ],
+                checkPass: [
+                    { required: true, message: '请再次输入用户新密码', trigger: 'blur' },
+                    { min: 4, max: 16, message: '密码长度在 4 到 16 个字符', trigger: 'blur' },
+                    { validator: validatePass, trigger: 'blur' },
+                ],
+            },
         }
     },
     methods: {
+        // 重置表单数据
+        resetForm(name) {
+            this.$refs[name].resetFields()
+        },
+        // 退出登录
         logout() {
             window.localStorage.removeItem('token') || this.$router.push('/login')
         },
+        // 获取导航栏数据
         async getMenuList() {
             const { data: response } = await this.$http.get('/users/menulist/')
             this.menuList = response
+        },
+        // 获取用户信息
+        async getUserInfo() {
+            const { data: response } = await this.$http.get('users/whoami/')
+            if (response.code) return this.$message.error(response.message)
+            this.user = response
+        },
+        // 下拉菜单
+        handleCommand(command) {
+            console.log(command, typeof command)
+            if (command === 'logout') this.logout()
+            if (command === 'chpwd') this.chpwDialogVisible = true
+        },
+        // 修改密码
+        chpw() {},
+        // 关闭输入框前提示
+        chpwHandleClose() {
+            this.$msgbox
+                .alert('取消后会导致当前填写的数据消失', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                })
+                .then(() => {
+                    this.resetForm('chpw')
+                    this.chpwDialogVisible = false
+                    this.$message({
+                        type: 'info',
+                        message: '已取消',
+                    })
+                })
+                .catch(() => {})
         },
     },
 }
@@ -125,5 +235,8 @@ export default {
 }
 .el-menu {
     border-right: none;
+}
+.el-dropdown {
+    cursor: pointer;
 }
 </style>

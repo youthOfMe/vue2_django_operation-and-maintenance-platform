@@ -4,14 +4,14 @@ from django.shortcuts import render
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.backends import ModelBackend
-from django.http.response import HttpResponse
+from django.http.response import HttpResponse, Http404
 from rest_framework.filters import SearchFilter
 from rest_framework.permissions import IsAuthenticated, IsAdminUser
 from rest_framework.response import Response
 from rest_framework.request import Request
 from rest_framework.views import APIView
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from User.models import UserProfile
@@ -49,6 +49,15 @@ class UserViewSet(ModelViewSet):
     #     # 对queryset进行处理
     #     return queryset
 
+    # 如果想自定义增删改查就使用这个方法
+    # 默认路由地址 users/w/
+    @action(detail=False, url_path='whoami') #  是否是详情 detail为True 参数至少要有pk
+    def w(self, request):
+        return Response({
+            'id': request.user.id,
+            'username': request.user.username
+        })
+
     # 重新更新函数 对patch和put都管用
     # def update(self, request, *args, **kwargs):
     #     pass
@@ -61,8 +70,17 @@ class UserViewSet(ModelViewSet):
 
         return super().partial_update(request, *args, **kwargs)
 
-    # 防止
-    # 1.
+    # 防止超级管理员被删除
+    # 1. 在update, destory方法中 进行id的判断 如果为1 抛异常
+    # 2. 详情页三个方法都需要使用get_object pk
+    def get_object(self):
+        # pk
+        if self.request.method.lower() != 'get':
+            pk = self.kwargs.get('pk')
+            if pk == '1' or pk == 1:
+                raise Http404
+
+        return super().get_object()
 
 
 

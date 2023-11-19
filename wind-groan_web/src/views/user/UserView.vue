@@ -164,7 +164,7 @@ export default {
         this.getList ? this.getList() : ''
     },
     data() {
-        var validatePass = (rule, value, callback) => {
+        const validatePass = (rule, value, callback) => {
             value !== this.addForm.password ? callback(new Error('两次密码输入不一致')) : callback()
         }
 
@@ -231,8 +231,8 @@ export default {
     },
     methods: {
         // 重置表单数据
-        resetForm() {
-            this.$refs['add'].resetFields()
+        resetForm(name) {
+            this.$refs[name].resetFields()
         },
         // 关闭输入框前提示
         addHandleClose() {
@@ -242,7 +242,7 @@ export default {
                 type: 'warning',
             })
                 .then(() => {
-                    this.resetForm()
+                    this.resetForm('add')
                     this.addDialogVisible = false
                     this.$message({
                         type: 'info',
@@ -259,7 +259,7 @@ export default {
                 type: 'warning',
             })
                 .then(() => {
-                    this.resetForm()
+                    this.resetForm('edit')
                     this.editDialogVisible = false
                     this.$message({
                         type: 'info',
@@ -346,14 +346,19 @@ export default {
                 type: 'error',
             })
                 .then(async () => {
-                    const { data: response } = await this.$delete(`users/${id}/`)
+                    const { data: response } = await this.$http.delete(`users/${id}/`)
                     if (response.code) return this.$message.error(response.message)
                     this.getList(this.pagination.page)
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功',
+                    })
                 })
                 .catch((action) => {
-                    this.$msgbox({
-                        type: 'info',
-                        message: '已取消',
+                    console.log(action)
+                    this.$message({
+                        type: 'error',
+                        message: action,
                     })
                 })
         },

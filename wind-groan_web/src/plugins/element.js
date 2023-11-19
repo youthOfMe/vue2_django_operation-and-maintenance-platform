@@ -23,6 +23,10 @@ import {
     Loading,
     Tooltip,
     MessageBox,
+    Dropdown,
+    DropdownItem,
+    DropdownMenu,
+    Footer,
 } from 'element-ui'
 import { Card, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
@@ -49,7 +53,11 @@ Vue.use(Switch)
 Vue.use(Pagination)
 Vue.use(Loading.directive)
 Vue.use(Tooltip)
+Vue.use(Dropdown)
+Vue.use(DropdownItem)
+Vue.use(DropdownMenu)
+Vue.use(Footer)
 
-Vue.prototype.$msgbox = Message
+Vue.prototype.$message = Message
 Vue.prototype.$msgbox = MessageBox
 Vue.prototype.$confirm = MessageBox.confirm
