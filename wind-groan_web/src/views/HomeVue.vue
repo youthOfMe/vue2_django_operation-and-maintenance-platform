@@ -166,7 +166,7 @@ export default {
         },
         // 获取用户信息
         async getUserInfo() {
-            const { data: response } = await this.$http.get('users/whoami/')
+            const { data: response } = await this.$http.get('users/mgr/whoami/')
             if (response.code) return this.$message.error(response.message)
             this.user = response
         },
@@ -183,7 +183,7 @@ export default {
             this.$refs[name].validate(async (valid) => {
                 if (valid) {
                     const { data: response } = await this.$http.patch(
-                        `users/${id}/chpwd/`,
+                        `users/mgr/${id}/chpwd/`,
                         this.chpwdForm,
                     )
                     if (response.code) return this.$message.error(response.message)

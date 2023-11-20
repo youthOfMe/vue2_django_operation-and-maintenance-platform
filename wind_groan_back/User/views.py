@@ -15,8 +15,37 @@ from rest_framework.decorators import api_view, permission_classes, action
 from rest_framework.viewsets import ModelViewSet, ReadOnlyModelViewSet
 
 from User.models import UserProfile
-from User.serializers import UserSerializer, PwdSerializer
+from User.serializers import UserSerializer, PwdSerializer, PermSerializer, GroupSerializer
 from utils.exceptions import InvalidPassword
+from django.contrib.auth.models import Permission, Group, ContentType
+
+_exclude_content_types = [
+    c.id for c in ContentType.objects.filter(model__in=[
+        'logentry', 'group',    'permission',
+        'contenttype', 'session'
+    ])
+]
+# 写全局变量，只执行一次 可多次使用
+
+# 权限接口
+class PermViewSet(ModelViewSet):
+    # 根据有pk就是根据主键 进行过滤相关数据 在接口里进行
+    queryset = Permission.objects.exclude(content_type__in=_exclude_content_types).order_by('pk')
+    serializer_class = PermSerializer
+    search_fields = ['name', 'codename']
+
+class RoleViewSet(ModelViewSet):
+    queryset = Group.objects.all()
+    serializer_class = GroupSerializer
+
+    @action(['GET'], detail=True, url_path='perms')
+    def perms(self, request, pk=None):
+        obj = self.get_object()
+
+        data = self.serializer_class(obj).data
+        data['allPerms'] = list(PermViewSet.queryset.values('id', 'name')) # 查询集不能直接进行序列化 只能是字典/列表
+        return Response(data)
+
 
 
 class UserViewSet(ModelViewSet):
@@ -27,6 +56,30 @@ class UserViewSet(ModelViewSet):
     # filterset_fields = ['username'] # 严格等于 多个条件是and
     # filter_backends = [SearchFilter]
     search_fields = ['username', 'email'] # 指定在哪些字段进行模糊搜索
+
+    # 重写获取角色信息的函数
+    @action(['GET'], True, 'roles')
+    def roles(self, request, pk=None):
+        user = self.get_object()
+        data = UserSerializer(user).data
+        # roles = user.groups.all()
+        data['roles'] = [ u.id for u in user.groups.all() ]
+        data['allRoles'] = Group.objects.values('id', 'name') # 不能序列化集合 只能转换为字典
+
+        return Response(data)
+
+    # 进行给用户安排角色
+    # @action(['PATCH'], True, 'setroles')
+    @roles.mapping.put # 使用roles的patch方法时隐射到这个函数
+    def setroles(self, request, pk=None): # 详情页是必须提供pk
+        user = self.get_object()
+        roles = request.data.get('roles', None)
+        if roles is None:
+            pass
+        else:
+            user.groups.set(roles)
+
+        return Response(status=201)
 
     # 权限
     # permission_classers = [IsAdminUser] # 必须是管理员
@@ -154,6 +207,8 @@ class MenuItem(dict):
         self['children'].append(other)
 
 @api_view() # GET
+@permission_classes([IsAuthenticated])
+# staff代表admin管理员
 # @permission_classes([IsAuthenticated, IsAdminUser]) 第一个登录就可以 第二个必须is_staff = 1 是管理员才行
 def menulist_view(request):
     print(request.user) # user
@@ -163,14 +218,14 @@ def menulist_view(request):
     # 2. 写死
     menulist = []
 
-    if request.user.is_superuser:
+    if request.user:
         itemA = MenuItem(0, '首页', '/welcome')
         itemB = MenuItem(2, 'CMDB资产管理', '/welcome')
         itemC = MenuItem(3, '堡垒机', '/welcome')
         item = MenuItem(1, '用户管理') # 管理员权限
         item.children.append(MenuItem(101, '用户列表', '/users'))
         item.children.append(MenuItem(102, '角色列表', '/users/roles'))
-        item + MenuItem(103, '权限列表', '/users/')
+        item + MenuItem(103, '权限列表', '/users/perms')
 
         menulist.append(itemA)
         menulist.append(item)

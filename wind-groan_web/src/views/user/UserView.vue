@@ -63,6 +63,13 @@
                                 @click="handleEdit(row)"
                             ></el-button>
                         </el-tooltip>
+                        <el-tooltip content="分配权限" placement="bottom" effect="light">
+                            <el-button
+                                size="small"
+                                icon="el-icon-suitcase"
+                                @click="handleAuthorRole(row)"
+                            ></el-button>
+                        </el-tooltip>
                         <el-tooltip content="删除" placement="bottom" effect="light">
                             <el-button
                                 type="danger"
@@ -154,6 +161,27 @@
                 </el-button>
             </span>
         </el-dialog>
+        <!-- 分配角色 -->
+        <el-dialog
+            :title="`[${currentUser}]分配角色`"
+            :visible.sync="addRoleDialogVisible"
+            width="50%"
+            :before-close="addRoleHandleClose"
+        >
+            <el-tree
+                :data="roleList"
+                :props="{ label: 'name' }"
+                show-checkbox
+                ref="tree"
+                node-key="id"
+                default-expand-all
+                :default-checked-keys="selectedIds"
+            ></el-tree>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="addRoleHandleClose">取 消</el-button>
+                <el-button type="primary" @click="addRole()">确 定</el-button>
+            </span>
+        </el-dialog>
     </div>
 </template>
 
@@ -198,7 +226,7 @@ export default {
                     { validator: validatePass, trigger: 'blur' },
                 ],
             },
-            // 新增
+            // 编辑
             editDialogVisible: false,
             editForm: {
                 id: '',
@@ -227,6 +255,11 @@ export default {
                 page: 1,
                 size: 20,
             },
+            // 分配角色
+            addRoleDialogVisible: false,
+            roleList: [],
+            currentUser: {},
+            selectedIds: [],
         }
     },
     methods: {
@@ -273,7 +306,7 @@ export default {
             this.$refs['add'].validate(async (valid, obj) => {
                 console.log(valid, obj)
                 if (valid) {
-                    const { data: response } = await this.$http.post('users/', this.addForm)
+                    const { data: response } = await this.$http.post('users/mgr/', this.addForm)
                     if (response.code) return this.$message.error(response.message)
                 }
                 // 成功
@@ -294,7 +327,7 @@ export default {
             this.$refs['edit'].validate(async (valid) => {
                 if (valid) {
                     const { data: response } = await this.$http.patch(
-                        `users/${id}/chpw`,
+                        `users/mgr/${id}/chpw`,
                         this.editForm,
                     )
                     if (response.code) return this.$message.error(response.message)
@@ -310,7 +343,7 @@ export default {
                 page = 1
             }
             try {
-                const { data: response } = await this.$http.get('users/', {
+                const { data: response } = await this.$http.get('users/mgr/', {
                     params: {
                         page,
                         // username: this.username,
@@ -334,7 +367,7 @@ export default {
         async handleIsactiveChange(id, is_active) {
             // 激活/禁用某一个具体的用户 最划算的方式是提交一个值 要通过序列化器的校验就必须使用patch
             console.log(id, is_active)
-            const { data: response } = await this.$http.patch(`users/${id}/`, {
+            const { data: response } = await this.$http.patch(`users/mgr/${id}/`, {
                 is_active,
             })
             if (response.code) return this.$message.error(response.message)
@@ -349,7 +382,7 @@ export default {
                 type: 'error',
             })
                 .then(async () => {
-                    const { data: response } = await this.$http.delete(`users/${id}/`)
+                    const { data: response } = await this.$http.delete(`users/mgr/${id}/`)
                     if (response.code) return this.$message.error(response.message)
                     this.getList(this.pagination.page)
                     this.$message({
@@ -364,6 +397,53 @@ export default {
                         message: action,
                     })
                 })
+        },
+        // 清空表单
+        resetTree() {
+            this.roleList = []
+            this.selectedIds = []
+            this.currentUser = []
+        },
+        // 进行分配权限
+        async handleAuthorRole(row) {
+            const { id } = row
+            const { data: response } = await this.$http.get(`users/mgr/${id}/roles/`)
+            if (response.code) return this.$message.error(response.message)
+            console.log(response)
+            this.roleList = response.allRoles
+            this.selectedIds = response.roles
+            this.currentUser = row
+            this.addRoleDialogVisible = true
+        },
+        async addRole() {
+            const name = 'tree'
+            const { id } = this.currentUser
+            const roles = this.$refs[name].getCheckedKeys()
+            const { data: response } = await this.$http.put(`users/mgr/${id}/roles/`, {
+                roles,
+            })
+            if (response.code) return this.$message.error(response.message)
+            this.addRoleDialogVisible = false
+            this.$message.success(`${this.currentUser.username}权限修改成功`)
+        },
+        // 关闭输入框前提示
+        addRoleHandleClose() {
+            this.$msgbox
+                .alert('取消后会导致当前填写的数据消失', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                })
+                .then(() => {
+                    // console.log(666)
+                    // this.resetForm('add')
+                    this.addRoleDialogVisible = false
+                    this.$message({
+                        type: 'info',
+                        message: '已取消',
+                    })
+                })
+                .catch(() => {})
         },
     },
 }

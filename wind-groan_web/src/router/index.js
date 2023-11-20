@@ -25,6 +25,14 @@ const routes = [
                 path: '/users',
                 component: () => import('@/views/user/UserView.vue'),
             },
+            {
+                path: '/users/perms',
+                component: () => import('@/views/user/PermView.vue'),
+            },
+            {
+                path: '/users/roles',
+                component: () => import('@/views/user/RoleView.vue'),
+            },
         ],
     },
 ]

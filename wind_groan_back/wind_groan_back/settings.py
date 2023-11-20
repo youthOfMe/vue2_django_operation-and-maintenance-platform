@@ -191,6 +191,8 @@ REST_FRAMEWORK = {
     # 配置token权限类 验证token
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated', # 激活了就能登录 不必是管理员
+        # 'rest_framework.permissions.DjangoModelPermissions',
+        'utils.permissions.CrudModelPermissions'
     ],
     # 配置默认分页器
     'DEFAULT_PAGINATION_CLASS': 'utils.paginations.PageNumberPagination',
