@@ -33,6 +33,14 @@ const routes = [
                 path: '/users/roles',
                 component: () => import('@/views/user/RoleView.vue'),
             },
+            {
+                path: '/cmdb/citypes',
+                component: () => import('@/views/cmdb/CiType.vue'),
+            },
+            {
+                path: '/cmdb/cis',
+                component: () => import('@/views/cmdb/CiView.vue'),
+            },
         ],
     },
 ]

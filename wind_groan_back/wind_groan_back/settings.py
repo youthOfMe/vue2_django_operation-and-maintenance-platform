@@ -41,7 +41,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'App.apps.AppConfig',
     'rest_framework_simplejwt',
+    'rest_framework_mongoengine',
     'User',
+    'Cmdb',
     'django_filters',
 ]
 
@@ -82,6 +84,7 @@ WSGI_APPLICATION = 'wind_groan_back.wsgi.application'
 
 AUTH_USER_MODEL = 'User.UserProfile' # 告诉django用我自己的用户Model
 
+# 读取和加载配置信息 并使用客户端连接数据库
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
@@ -91,6 +94,15 @@ DATABASES = {
         'HOST': '127.0.0.1',
         'PORT': 3306,
     }
+}
+# MONGODB的配置
+MONGODB_DATABASES = {
+    'host': '127.0.0.1',
+    'port': 27017,
+    # 'username': 'youthOfMe',
+    # 'password': '123456',
+    'name': 'wind-groan',
+    'tz_aware': True,
 }
 
 
@@ -192,7 +204,7 @@ REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated', # 激活了就能登录 不必是管理员
         # 'rest_framework.permissions.DjangoModelPermissions',
-        'utils.permissions.CrudModelPermissions'
+        'utils.permissions.CrudModelPermissions' # 防止直接写url
     ],
     # 配置默认分页器
     'DEFAULT_PAGINATION_CLASS': 'utils.paginations.PageNumberPagination',

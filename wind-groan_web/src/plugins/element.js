@@ -28,6 +28,8 @@ import {
     DropdownMenu,
     Footer,
     Tree,
+    Option,
+    Select,
 } from 'element-ui'
 import { Card, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
@@ -59,6 +61,8 @@ Vue.use(DropdownItem)
 Vue.use(DropdownMenu)
 Vue.use(Footer)
 Vue.use(Tree)
+Vue.use(Select)
+Vue.use(Option)
 
 Vue.prototype.$message = Message
 Vue.prototype.$msgbox = MessageBox

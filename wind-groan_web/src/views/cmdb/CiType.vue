@@ -1,0 +1,189 @@
+<template>
+    <div>
+        <el-breadcrumb separator-class="el-icon-arrow-right">
+            <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
+            <el-breadcrumb-item>资产管理</el-breadcrumb-item>
+            <el-breadcrumb-item>资产类型</el-breadcrumb-item>
+        </el-breadcrumb>
+        <el-card>
+            <el-row :gutter="20">
+                <el-col :span="18">
+                    <el-input placeholder="请输入内容" v-model="name">
+                        <!-- 在模板中会传入时间对象event -->
+                        <el-button
+                            slot="append"
+                            icon="el-icon-search"
+                            @click="getList(1)"
+                        ></el-button>
+                    </el-input>
+                </el-col>
+                <el-col :span="6">
+                    <el-button type="primary" @click="addDialogVisible = true">添加资产</el-button>
+                </el-col>
+            </el-row>
+            <el-table
+                :data="dataList"
+                style="width: 100%"
+                :border="true"
+                stripe
+                v-loading="loading"
+                element-loading-text="拼命加载中"
+                element-loading-spinner="el-icon-loading"
+                element-loading-background="rgba(0, 0, 0, 0.8)"
+            >
+                <el-table-column type="index"></el-table-column>
+                <el-table-column prop="id" label="终端ID"></el-table-column>
+                <el-table-column prop="label" label="名称"></el-table-column>
+                <el-table-column label="操作" fixed="right">
+                    <template #default="{ row }">
+                        <el-tooltip content="编辑" placement="bottom" effect="light">
+                            <el-button size="small" icon="el-icon-edit"></el-button>
+                        </el-tooltip>
+                        <el-tooltip content="分配权限" placement="bottom" effect="light">
+                            <el-button
+                                size="small"
+                                icon="el-icon-suitcase"
+                                @click="handleSetPerm(row)"
+                            ></el-button>
+                        </el-tooltip>
+                        <el-tooltip content="删除" placement="bottom" effect="light">
+                            <el-button type="danger" size="small" icon="el-icon-delete"></el-button>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <el-pagination
+                @current-change="getList"
+                :current-page="pagination.page"
+                :page-size="pagination.size"
+                layout="total, prev, pager, next, jumper"
+                :total="pagination.total"
+            ></el-pagination>
+        </el-card>
+        <!-- 增加资产 -->
+        <el-dialog
+            title="新增角色"
+            :visible.sync="addDialogVisible"
+            width="50%"
+            :before-close="addHandleClose"
+        >
+            <el-form
+                :model="addForm"
+                :rules="addRules"
+                ref="add"
+                labal-width="100px"
+                class="demo-ruleForm"
+            >
+                <el-form-item label="权限组名称" prop="name">
+                    <el-input v-model="addForm.name"></el-input>
+                </el-form-item>
+                <el-form-item>
+                    <el-button @click="resetForm()">重置</el-button>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="addHandleClose">取 消</el-button>
+                <el-button type="primary" @click="addDialogVisible = false || add()">
+                    确 定
+                </el-button>
+            </span>
+        </el-dialog>
+    </div>
+</template>
+
+<script>
+export default {
+    created() {
+        this.getList()
+        console.log(this.addDialogVisible, 666)
+    },
+    data() {
+        return {
+            name: '',
+            serach: '',
+            // 数据显示
+            dataList: [],
+            pagination: { total: 0, page: 1, size: 20 },
+            loading: false,
+            // 新增
+            addDialogVisible: false,
+            addForm: {
+                name: '',
+            },
+            addRules: {
+                name: [
+                    { required: true, message: '请输入权限组名称', trigger: 'blur' },
+                    { min: 4, max: 16, message: '用户名长度在 2 到 16 个字符', trigger: 'blur' },
+                ],
+            },
+        }
+    },
+    methods: {
+        // 重置表单数据
+        resetForm(name) {
+            this.$refs[name].resetFields()
+        },
+        // 获取用户列表数据
+        async getList(page = 1) {
+            this.loading = true
+            if (typeof page !== 'number' || page <= 0) {
+                page = 1
+            }
+            try {
+                const { data: response } = await this.$http.get('cmdb/citypes/', {
+                    params: {
+                        page,
+                        // username: this.username,
+                        search: this.username,
+                    },
+                })
+                if (response.code) return this.$message.error(response.message)
+                this.dataList = response.results
+                this.pagination = response.pagination
+            } catch (error) {
+                this.$message({
+                    type: 'error',
+                    message: '用户未激活',
+                })
+            } finally {
+                this.loading = false
+            }
+        },
+        // 关闭输入框前提示
+        addHandleClose() {
+            this.$msgbox
+                .alert('取消后会导致当前填写的数据消失', '提示', {
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'warning',
+                })
+                .then(() => {
+                    this.resetForm('add')
+                    this.addDialogVisible = false
+                    this.$message({
+                        type: 'info',
+                        message: '已取消',
+                    })
+                })
+                .catch(() => {})
+        },
+        // 添加用户数据
+        add() {
+            this.$refs['add'].validate(async (valid, obj) => {
+                console.log(valid, obj)
+                if (valid) {
+                    const { data: response } = await this.$http.post('users/mgr/', this.addForm)
+                    if (response.code) return this.$message.error(response.message)
+                }
+                // 成功
+                this.addDialogVisible = false
+                // 拿回数据
+                this.getList()
+            })
+        },
+    },
+}
+</script>
+
+<style lang="scss" scoped></style>

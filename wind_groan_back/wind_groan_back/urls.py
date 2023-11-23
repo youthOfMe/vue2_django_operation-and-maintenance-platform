@@ -29,6 +29,8 @@ urlpatterns = [
     path('login/', tobview, name="login"), # /login/ 用户登录的路由
     path('token/', tobview, name='token_obtain_pair'), # 获取token 只支持post
     path('token/refresh/', TokenRefreshView.as_view(), name='token_refresh'), # 刷新toekn
-    # usser
-    path('users/', include('User.urls'))
+    # user
+    path('users/', include('User.urls')),
+    # cmdb
+    path('cmdb/', include('Cmdb.urls'))
 ]

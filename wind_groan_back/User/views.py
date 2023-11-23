@@ -21,10 +21,12 @@ from django.contrib.auth.models import Permission, Group, ContentType
 
 _exclude_content_types = [
     c.id for c in ContentType.objects.filter(model__in=[
-        'logentry', 'group',    'permission',
+        'logentry', 'group', 'permission',
         'contenttype', 'session'
     ])
 ]
+
+
 # 写全局变量，只执行一次 可多次使用
 
 # 权限接口
@@ -34,8 +36,9 @@ class PermViewSet(ModelViewSet):
     serializer_class = PermSerializer
     search_fields = ['name', 'codename']
 
+
 class RoleViewSet(ModelViewSet):
-    queryset = Group.objects.all()
+    queryset = Group.objects.all().order_by('id')
     serializer_class = GroupSerializer
 
     @action(['GET'], detail=True, url_path='perms')
@@ -43,19 +46,18 @@ class RoleViewSet(ModelViewSet):
         obj = self.get_object()
 
         data = self.serializer_class(obj).data
-        data['allPerms'] = list(PermViewSet.queryset.values('id', 'name')) # 查询集不能直接进行序列化 只能是字典/列表
+        data['allPerms'] = list(PermViewSet.queryset.values('id', 'name'))  # 查询集不能直接进行序列化 只能是字典/列表
         return Response(data)
 
 
-
 class UserViewSet(ModelViewSet):
-    queryset = UserProfile.objects.all()
+    queryset = UserProfile.objects.all().order_by('id')
     serializer_class = UserSerializer
 
     # filter_backends = [django_filters.rest_framework.DjangoFilterBackend]
     # filterset_fields = ['username'] # 严格等于 多个条件是and
     # filter_backends = [SearchFilter]
-    search_fields = ['username', 'email'] # 指定在哪些字段进行模糊搜索
+    search_fields = ['username', 'email']  # 指定在哪些字段进行模糊搜索
 
     # 重写获取角色信息的函数
     @action(['GET'], True, 'roles')
@@ -63,15 +65,15 @@ class UserViewSet(ModelViewSet):
         user = self.get_object()
         data = UserSerializer(user).data
         # roles = user.groups.all()
-        data['roles'] = [ u.id for u in user.groups.all() ]
-        data['allRoles'] = Group.objects.values('id', 'name') # 不能序列化集合 只能转换为字典
+        data['roles'] = [u.id for u in user.groups.all()]
+        data['allRoles'] = Group.objects.values('id', 'name')  # 不能序列化集合 只能转换为字典
 
         return Response(data)
 
     # 进行给用户安排角色
     # @action(['PATCH'], True, 'setroles')
-    @roles.mapping.put # 使用roles的patch方法时隐射到这个函数
-    def setroles(self, request, pk=None): # 详情页是必须提供pk
+    @roles.mapping.put  # 使用roles的patch方法时隐射到这个函数
+    def setroles(self, request, pk=None):  # 详情页是必须提供pk
         user = self.get_object()
         roles = request.data.get('roles', None)
         if roles is None:
@@ -106,7 +108,7 @@ class UserViewSet(ModelViewSet):
     # 如果想自定义增删改查就使用这个方法
     # 默认路由地址 users/w/
     # 查询登录的用户信息
-    @action(detail=False, url_path='whoami') #  是否是详情 detail为True 参数至少要有pk
+    @action(detail=False, url_path='whoami')  # 是否是详情 detail为True 参数至少要有pk
     def w(self, request):
         return Response({
             'id': request.user.id,
@@ -154,12 +156,11 @@ class UserViewSet(ModelViewSet):
         return super().get_object()
 
 
-
 # 必须登录了
 # @login_required
 def userlogin(request):
     # 能到视图函数, 就一定通过了前面的中间件的process_request
-    print(1, request.user) #  从session标中通过sessionkey查session_data 认证中间件帮我们查了user_id 用user_id查auth_user表
+    print(1, request.user)  # 从session标中通过sessionkey查session_data 认证中间件帮我们查了user_id 用user_id查auth_user表
     print(2, request.session)
     if request.user.is_authenticated:
         print(4, '我真的是User的实例')
@@ -168,27 +169,29 @@ def userlogin(request):
     user = authenticate(username='admin', password='123456')
     print(3, user)
     if user:
-        login(request, user) # request.user token => sessionid, session_data, user_id
+        login(request, user)  # request.user token => sessionid, session_data, user_id
         # response阶段, 中借鉴还会生成set-cookie sessionid
     return HttpResponse('我成功login')
 
+
 @api_view(['GET', 'POST'])
-def test_jwt_login(request:Request):
+def test_jwt_login(request: Request):
     # 由于我们设置了DRF全局认证类 那么进入视图的时候应该是认证过了
     print('~' * 30)
     print(1, request.COOKIES, request._request.COOKIES, request._request.headers)
-    print(2, request.data) # json drf --> dict
+    print(2, request.data)  # json drf --> dict
     print(3, request.user, request.user.is_authenticated)
     print(4, request.auth)
     print('~' * 30)
     return Response()
+
 
 class MenuItem(dict):
     def __init__(self, id, name, path=None):
         super()
         self['id'] = id
         self['name'] = name
-        self['path'] = path # 告诉前端静态路由
+        self['path'] = path  # 告诉前端静态路由
         self['children'] = []
 
     # 访问属性的时候就写会进行执行这个
@@ -206,30 +209,35 @@ class MenuItem(dict):
     def __add__(self, other):
         self['children'].append(other)
 
-@api_view() # GET
+
+@api_view()  # GET
 @permission_classes([IsAuthenticated])
 # staff代表admin管理员
 # @permission_classes([IsAuthenticated, IsAdminUser]) 第一个登录就可以 第二个必须is_staff = 1 是管理员才行
 def menulist_view(request):
-    print(request.user) # user
-    print(request.auth) # token
+    # user: UserProfile = request.user
+    print(request.user)  # user
+    print(request.auth)  # token
     # 菜单数据哪里来
     # 1. 数据库李存着, 反复拿这个不怎么变化的菜单
     # 2. 写死
     menulist = []
+    home = MenuItem(0, '首页', '/welcome')
+    menulist.append(home)
+    if request.user.has_perm('user.view_userprofile'):
+        user = MenuItem(1, '用户管理')  # 管理员权限
+        user.children.append(MenuItem(101, '用户列表', '/users'))
+        user.children.append(MenuItem(102, '角色列表', '/users/roles'))
+        user + MenuItem(103, '权限列表', '/users/perms')
+        menulist.append(user)
 
-    if request.user:
-        itemA = MenuItem(0, '首页', '/welcome')
-        itemB = MenuItem(2, 'CMDB资产管理', '/welcome')
-        itemC = MenuItem(3, '堡垒机', '/welcome')
-        item = MenuItem(1, '用户管理') # 管理员权限
-        item.children.append(MenuItem(101, '用户列表', '/users'))
-        item.children.append(MenuItem(102, '角色列表', '/users/roles'))
-        item + MenuItem(103, '权限列表', '/users/perms')
+    if request.user.has_perm('cmdb.use_citype'):
+        cmdb = MenuItem(2, 'CMDB资产管理', '/welcome')
+        cmdb.children.append(MenuItem(201, '资产类型', '/cmdb/citypes'))
+        cmdb.children.append(MenuItem(202, '资产列表', '/cmdb/cis'))
+        menulist.append(cmdb)
 
-        menulist.append(itemA)
-        menulist.append(item)
-        menulist.append(itemB)
-        menulist.append(itemC)
+    itemC = MenuItem(3, '堡垒机', '/welcome')
+    menulist.append(itemC)
 
     return Response(menulist)

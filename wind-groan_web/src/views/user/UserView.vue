@@ -125,9 +125,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addHandleClose">取 消</el-button>
-                <el-button type="primary" @click="addDialogVisible = false || add()">
-                    确 定
-                </el-button>
+                <el-button type="primary" @click="add()">确 定</el-button>
             </span>
         </el-dialog>
         <!-- 修改用户 -->
@@ -156,9 +154,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="editHandleClose">取 消</el-button>
-                <el-button type="primary" @click="editDialogVisible = false || edit()">
-                    确 定
-                </el-button>
+                <el-button type="primary" @click="edit()">确 定</el-button>
             </span>
         </el-dialog>
         <!-- 分配角色 -->
@@ -308,11 +304,11 @@ export default {
                 if (valid) {
                     const { data: response } = await this.$http.post('users/mgr/', this.addForm)
                     if (response.code) return this.$message.error(response.message)
+                    // 成功
+                    this.addDialogVisible = false
+                    // 拿回数据
+                    this.getList()
                 }
-                // 成功
-                this.addDialogVisible = false
-                // 拿回数据
-                this.getList()
             })
         },
         // 编辑用户数据
