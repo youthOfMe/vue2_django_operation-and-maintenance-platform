@@ -15,11 +15,12 @@ class CiTypeField(EmbeddedDocument):
 
 
 class CiType(Document):
-    meta = { 'collection': 'citypes' } # 文档独立成立为一行时放在什么里面
+    meta = { 'collection': 'citypes', 'app_label': 'Cmdb', 'model_name': 'citypes' } # 文档独立成立为一行时放在什么里面
     # id
     name = StringField(required=True, unique_with='version', max_length=24)
     version = IntField(required=True, default=1)
     label = StringField(max_length=24)
+    flag = BooleanField(default=False) # 表示类型是否可以在选择框中显示
     fields = ListField(EmbeddedDocumentField(CiTypeField))
 
 # 1. 空的Model类职位生成基本权限
@@ -29,5 +30,5 @@ class CiType(Document):
 
 class Ci(DynamicDocument):
     """所有类型产生的所有实例"""
-    meta = { 'collection': 'cis' }
+    meta = { 'collection': 'cis', 'app_label': 'Cmdb', 'model_name': 'cis' }
     # 字段

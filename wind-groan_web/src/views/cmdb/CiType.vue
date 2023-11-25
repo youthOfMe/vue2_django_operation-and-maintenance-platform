@@ -8,7 +8,7 @@
         <el-card>
             <el-row :gutter="20">
                 <el-col :span="18">
-                    <el-input placeholder="请输入内容" v-model="name">
+                    <el-input placeholder="请输入内容" v-model="serach">
                         <!-- 在模板中会传入时间对象event -->
                         <el-button
                             slot="append"
@@ -75,18 +75,13 @@
                 labal-width="100px"
                 class="demo-ruleForm"
             >
-                <el-form-item label="权限组名称" prop="name">
-                    <el-input v-model="addForm.name"></el-input>
-                </el-form-item>
                 <el-form-item>
                     <el-button @click="resetForm()">重置</el-button>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addHandleClose">取 消</el-button>
-                <el-button type="primary" @click="addDialogVisible = false || add()">
-                    确 定
-                </el-button>
+                <el-button type="primary" @click="add()">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -100,7 +95,6 @@ export default {
     },
     data() {
         return {
-            name: '',
             serach: '',
             // 数据显示
             dataList: [],
@@ -108,15 +102,8 @@ export default {
             loading: false,
             // 新增
             addDialogVisible: false,
-            addForm: {
-                name: '',
-            },
-            addRules: {
-                name: [
-                    { required: true, message: '请输入权限组名称', trigger: 'blur' },
-                    { min: 4, max: 16, message: '用户名长度在 2 到 16 个字符', trigger: 'blur' },
-                ],
-            },
+            addForm: {},
+            addRules: {},
         }
     },
     methods: {
@@ -135,7 +122,7 @@ export default {
                     params: {
                         page,
                         // username: this.username,
-                        search: this.username,
+                        search: this.serach,
                     },
                 })
                 if (response.code) return this.$message.error(response.message)

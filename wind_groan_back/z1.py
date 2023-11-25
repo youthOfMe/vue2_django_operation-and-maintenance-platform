@@ -14,6 +14,8 @@
 #     def __str__(self):
 #         return "<User {}, {}, {}>".format(self.pk, self.name, self.age)
 
+print(666666666666666666666666)
+
 MONGODB_DATABASES = {
     'host': '127.0.0.1',
     'port': 27017,

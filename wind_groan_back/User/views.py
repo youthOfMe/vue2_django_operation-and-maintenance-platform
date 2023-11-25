@@ -121,6 +121,7 @@ class UserViewSet(ModelViewSet):
         user = request.user
         old = request.data.get('oldPassword', '')
         # serializer = PwdSerializer()
+        # 为什么对新密码进行校验再返回后 会出现错误？
         if user.check_password(old):
             user.set_password(request.data.get('password', ''))
             user.save()
@@ -155,6 +156,7 @@ class UserViewSet(ModelViewSet):
 
         return super().get_object()
 
+print(UserViewSet.queryset.__dict__.keys(), "-----------------------------------------------------2") # 看属性中都有什么
 
 # 必须登录了
 # @login_required
@@ -237,7 +239,7 @@ def menulist_view(request):
         cmdb.children.append(MenuItem(202, '资产列表', '/cmdb/cis'))
         menulist.append(cmdb)
 
-    itemC = MenuItem(3, '堡垒机', '/welcome')
-    menulist.append(itemC)
+        itemC = MenuItem(3, '堡垒机', '/welcome')
+        menulist.append(itemC)
 
-    return Response(menulist)
+        return Response(menulist)

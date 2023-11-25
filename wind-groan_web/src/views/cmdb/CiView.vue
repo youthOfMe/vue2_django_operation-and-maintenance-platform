@@ -8,7 +8,7 @@
         <el-card>
             <el-row :gutter="20">
                 <el-col :span="18">
-                    <el-input placeholder="请输入内容" v-model="name">
+                    <el-input placeholder="请输入内容" v-model="serach">
                         <!-- 在模板中会传入时间对象event -->
                         <el-button
                             slot="append"
@@ -32,8 +32,13 @@
                 element-loading-background="rgba(0, 0, 0, 0.8)"
             >
                 <el-table-column type="index"></el-table-column>
-                <el-table-column prop="id" label="终端ID"></el-table-column>
-                <el-table-column prop="label" label="名称"></el-table-column>
+                <el-table-column prop="id" label="资产ID"></el-table-column>
+                <el-table-column prop="label" label="资产类型"></el-table-column>
+                <el-table-column prop="fields[0]" label="资产名称">
+                    <template #default="{ row }">
+                        {{ row.fields[0].value }}
+                    </template>
+                </el-table-column>
                 <el-table-column label="操作" fixed="right">
                     <template #default="{ row }">
                         <el-tooltip content="编辑" placement="bottom" effect="light">
@@ -65,7 +70,7 @@
         <el-dialog
             title="新增角色"
             :visible.sync="addDialogVisible"
-            width="50%"
+            width="80%"
             :before-close="addHandleClose"
         >
             <el-form
@@ -75,9 +80,6 @@
                 label-width="100px"
                 class="demo-ruleForm"
             >
-                <el-form-item label="权限组名称" prop="name">
-                    <el-input v-model="addForm.name"></el-input>
-                </el-form-item>
                 <el-form-item label="类型" prop="citype">
                     <el-select
                         v-model="addForm.citype"
@@ -95,10 +97,10 @@
                 </el-form-item>
                 <!-- 根据上面选择类型 动态增加表单项 -->
                 <el-form-item
-                    v-for="(field, index) in addForm.fields"
+                    v-for="(field, cmIndex) in addForm.fields"
                     :label="field.label"
                     :key="field.id"
-                    :prop="'fields.' + index + '.value'"
+                    :prop="'fields.' + cmIndex + '.value'"
                     :rules="
                         field.required
                             ? {
@@ -109,7 +111,52 @@
                             : {}
                     "
                 >
-                    <el-input v-model="field.value"></el-input>
+                    <el-input v-model="field.value" v-if="field.type === 'str'"></el-input>
+                    <div v-else-if="field.type === 'date'">自行完成 使用datepicker</div>
+                    <div v-else-if="field.type.startsWith('list:')">
+                        list: Network Interface:1 怎么处理 要套娃了
+                        <el-button
+                            icon="el-icon-plus"
+                            plain
+                            type="success"
+                            size="mini"
+                            @click="handleAddChild(field)"
+                        ></el-button>
+                        <el-card
+                            v-for="(networkItem, networkIndex) in field.children"
+                            :key="`${field.name}.children.${networkIndex}`"
+                        >
+                            <el-form-item
+                                v-for="(field, addNetIndex) in networkItem.fields"
+                                :label="field.label"
+                                :key="field.id"
+                                :prop="
+                                    'fields.' +
+                                    cmIndex +
+                                    '.children.' +
+                                    networkIndex +
+                                    '.fields.' +
+                                    addNetIndex +
+                                    '.value'
+                                "
+                                :rules="
+                                    field.required
+                                        ? {
+                                              required: true,
+                                              message: field.label + '不能为空',
+                                              trigger: 'blur',
+                                          }
+                                        : {}
+                                "
+                            >
+                                <el-input
+                                    v-model="field.value"
+                                    v-if="field.type === 'str'"
+                                ></el-input>
+                                <div v-else-if="field.type === 'date'">自行完成 使用datepicker</div>
+                            </el-form-item>
+                        </el-card>
+                    </div>
                 </el-form-item>
                 <el-form-item>
                     <el-button @click="resetForm('add')">重置</el-button>
@@ -131,7 +178,6 @@ export default {
     },
     data() {
         return {
-            name: '',
             serach: '',
             // 数据显示
             dataList: [],
@@ -142,15 +188,10 @@ export default {
             // 新增
             addDialogVisible: false,
             addForm: {
-                name: '',
                 citype: '',
-                // fields: [],
+                fields: [],
             },
             addRules: {
-                name: [
-                    { required: true, message: '请输入权限组名称', trigger: 'blur' },
-                    { min: 4, max: 16, message: '用户名长度在 2 到 16 个字符', trigger: 'blur' },
-                ],
                 citype: [{ required: true, message: '请选择资产类型', trigger: 'blur' }],
             },
         }
@@ -159,6 +200,7 @@ export default {
         // 重置表单数据
         resetForm(name) {
             this.$refs[name].resetFields()
+            this.addForm.fields = []
         },
         // 获取用户列表数据
         async getList(page = 1) {
@@ -216,21 +258,40 @@ export default {
             // console.log(this.addForm.citype, args, '############')
             const { data: response } = await this.$http.get(`cmdb/citypes/${id}/`) // 详情页
             if (response.code) return this.$message.error(response.message)
+            this.addForm.name = response.name
+            this.addForm.label = response.label
+            this.addForm.version = response.version
+
             console.log(response.fields)
             // 进行响应式给对象绑定数据
             this.$set(this.addForm, 'fields', response.fields)
             // this.addForm.fields = response.fields
+        },
+        //
+        async handleAddChild(currentField) {
+            console.log(currentField)
+            console.log(currentField.type.split(':'))
+            const [, name, version = 1] = currentField.type.split(':')
+            const { data: response } = await this.$http.get(`cmdb/citypes/${name}/${version}/`) // 详情页
+            if (response.code) return this.$message.error(response.message)
+            console.log(response) // 返回了类型信息 这个类型信息可以创建多个网络接口的实例，动态创建该类型的表单项用于填写
+            if (!(`children` in currentField)) {
+                this.$set(currentField, 'children', [])
+            }
+            currentField.children.push(response)
+            console.log(this.addForm)
         },
         // 添加用户数据
         add() {
             this.$refs['add'].validate(async (valid, obj) => {
                 console.log(valid, obj)
                 if (valid) {
-                    const { data: response } = await this.$http.post('users/mgr/', this.addForm)
+                    console.log(this.addForm)
+                    const { data: response } = await this.$http.post('cmdb/cis/', this.addForm) // 资产列表页进行新增
+                    console.log(response)
                     if (response.code) return this.$message.error(response.message)
-                    // 成功
                     this.addDialogVisible = false
-                    // 拿回数据
+                    this.resetForm('add')
                     this.getList()
                 }
             })
@@ -239,4 +300,8 @@ export default {
 }
 </script>
 
-<style lang="scss" scoped></style>
+<style lang="less" scoped>
+.el-form-item .el-form-item {
+    margin-bottom: 22px;
+}
+</style>
