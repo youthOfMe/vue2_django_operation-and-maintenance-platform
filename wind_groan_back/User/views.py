@@ -110,6 +110,8 @@ class UserViewSet(ModelViewSet):
     # 查询登录的用户信息
     @action(detail=False, url_path='whoami')  # 是否是详情 detail为True 参数至少要有pk
     def w(self, request):
+        print(request.user)
+        print(request.auth)
         return Response({
             'id': request.user.id,
             'username': request.user.username
@@ -233,7 +235,7 @@ def menulist_view(request):
         user + MenuItem(103, '权限列表', '/users/perms')
         menulist.append(user)
 
-    if request.user.has_perm('cmdb.use_citype'):
+    if request.user.has_perm('Cmdb.use_citype'):
         cmdb = MenuItem(2, 'CMDB资产管理', '/welcome')
         cmdb.children.append(MenuItem(201, '资产类型', '/cmdb/citypes'))
         cmdb.children.append(MenuItem(202, '资产列表', '/cmdb/cis'))

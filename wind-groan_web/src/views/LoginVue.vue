@@ -88,6 +88,7 @@ export default {
                           // this.$http.get() // axios
                           // 使用axios配合await的时候不能使用then进行处理
                           const { data: response } = await this.$http.post('login/', this.loginForm)
+                          console.log(response)
                           !response.code
                               ? (this.$message({
                                     message: '认证成功 欢迎您管理员',
