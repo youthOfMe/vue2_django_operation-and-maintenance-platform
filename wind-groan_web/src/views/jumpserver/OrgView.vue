@@ -17,10 +17,18 @@
             <span class="custom-tree-node" slot-scope="{ node, data }">
                 <span>{{ node.label }}</span>
                 <span>
-                    <el-button type="text" size="mini" @click="() => append(data)">
+                    <el-button
+                        type="text"
+                        size="mini"
+                        @click="() => handleCommand(['add_group', node, data])"
+                    >
                         Append
                     </el-button>
-                    <el-button type="text" size="mini" @click="() => remove(node, data)">
+                    <el-button
+                        type="text"
+                        size="mini"
+                        @click="() => handleCommand(['delete', node, data])"
+                    >
                         Delete
                     </el-button>
                     <el-dropdown @command="handleCommand">
@@ -144,7 +152,7 @@ export default {
                 this.addDialogVisible = true
                 this.addForm.groupname = data.name
                 this.addForm.parent = data.id
-            }
+            } else if (type === 'delete') this.delOrg(data)
             console.log(this.addForm)
         },
         // 关闭输入框前提示
@@ -196,11 +204,46 @@ export default {
                     if (response.code) return this.$message.error(response.message)
                     // 成功
                     this.addDialogVisible = false
+                    this.$message({
+                        type: 'success',
+                        message: '添加成功',
+                    })
                     // 拿回数据
                     this.getList()
                     this.resetForm('add')
                 }
             })
+        },
+        // 删除资产数据
+        delOrg(data) {
+            const { id, name } = data
+            this.$confirm(
+                `此操作将永久删除[${name}]组及其子分组, 以及其下所有的主机 </br> 是否继续`,
+                '警告',
+                {
+                    distinguishCancelAndClose: true,
+                    confirmButtonText: '确定',
+                    cancelButtonText: '取消',
+                    type: 'error',
+                    dangerouslyUseHTMLString: true,
+                },
+            )
+                .then(async () => {
+                    const { data: response } = await this.$http.delete(`jumpserver/orgs/${id}/`) // 删除某个id的数据 详情页
+                    if (response.code) return this.$message.error(response.message)
+                    this.getList()
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功',
+                    })
+                })
+                .catch((action) => {
+                    console.log(action)
+                    this.$message({
+                        type: 'error',
+                        message: '取消删除 你是个牛马',
+                    })
+                })
         },
     },
 }

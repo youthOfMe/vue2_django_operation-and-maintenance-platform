@@ -323,7 +323,7 @@ export default {
             this.$refs['edit'].validate(async (valid) => {
                 if (valid) {
                     const { data: response } = await this.$http.patch(
-                        `users/mgr/${id}/chpw`,
+                        `users/mgr/${id}/`,
                         this.editForm,
                     )
                     if (response.code) return this.$message.error(response.message)
