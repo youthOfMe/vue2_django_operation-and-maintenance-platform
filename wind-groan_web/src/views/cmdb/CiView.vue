@@ -3,7 +3,7 @@
         <el-breadcrumb separator-class="el-icon-arrow-right">
             <el-breadcrumb-item :to="{ path: '/home' }">首页</el-breadcrumb-item>
             <el-breadcrumb-item>资产管理</el-breadcrumb-item>
-            <el-breadcrumb-item>资产类型</el-breadcrumb-item>
+            <el-breadcrumb-item>资产列表</el-breadcrumb-item>
         </el-breadcrumb>
         <el-card>
             <el-row :gutter="20">

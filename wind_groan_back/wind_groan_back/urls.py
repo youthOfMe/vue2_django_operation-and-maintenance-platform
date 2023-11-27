@@ -32,5 +32,7 @@ urlpatterns = [
     # user
     path('users/', include('User.urls')),
     # cmdb
-    path('cmdb/', include('Cmdb.urls'))
+    path('cmdb/', include('Cmdb.urls')),
+    # 堡垒机
+    path('jumpserver/', include('Jumpserver.urls'))
 ]

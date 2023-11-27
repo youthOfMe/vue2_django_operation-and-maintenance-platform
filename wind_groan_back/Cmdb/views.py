@@ -16,7 +16,7 @@ class CiTypeViewSet(viewsets.ModelViewSet): # CRUD
     permission_classes = [IsAuthenticated, CrudDocumentModelPermissions]
 
     filter_backends = [MongoSearchFilter] # 控制搜索使用的搜索类
-    search_fields = ['label']
+    search_fields = ['label', 'name']
 
     # CRUD基本操作已经完成
     # 1. action /cmdb/citypes/111/xxx/
