@@ -41,6 +41,10 @@ const routes = [
                 path: '/cmdb/cis',
                 component: () => import('@/views/cmdb/CiView.vue'),
             },
+            {
+                path: '/jumpserver/orgs',
+                component: () => import('@/views/jumpserver/OrgView.vue'),
+            },
         ],
     },
 ]

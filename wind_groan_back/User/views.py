@@ -241,7 +241,8 @@ def menulist_view(request):
         cmdb.children.append(MenuItem(202, '资产列表', '/cmdb/cis'))
         menulist.append(cmdb)
 
-        itemC = MenuItem(3, '堡垒机', '/welcome')
-        menulist.append(itemC)
+    item = MenuItem(3, '堡垒机')
+    item.append(MenuItem(301, '资产管理', '/jumpserver/orgs'))
+    menulist.append(item)
 
-        return Response(menulist)
+    return Response(menulist)
