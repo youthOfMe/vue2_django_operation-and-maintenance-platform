@@ -10,7 +10,7 @@ class OrgSerializer(serializers.ModelSerializer):
 class HostSerializer(serializers.ModelSerializer):
     class Meta:
         model = Host
-        fileds = '__all__'
+        fields = '__all__'
         extra_kwargs = {
             'password': { 'write_only': True },
             'ssh_pkey_path': { 'write_only': True }

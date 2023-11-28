@@ -1,10 +1,18 @@
+from pathlib import Path
+
 from django.shortcuts import render
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .models import Host
 from .serializers import OrgSerializer, Organization, HostSerializer
 from rest_framework.decorators import action
+from rest_framework.request import Request
+from rest_framework.decorators import api_view, permission_classes
+from django.conf import settings
+from datetime import datetime
+import uuid
 
 class OrgViewSet(ModelViewSet):
     queryset = Organization.objects.filter(is_deleted=False)
@@ -65,3 +73,26 @@ class HostViewSet(ModelViewSet):
     queryset = Host.objects.all()
     serializer_class = HostSerializer
     permission_classes = []
+
+# 给request注释一下类型
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def upload(request: Request):
+    file_field_name = 'file'
+    fileobj = request.data[file_field_name]
+    # if fileobj.size > 1024:
+    #     raise HugeFileSize('文件超过了配置的打小')
+    basedir = Path(settings.JUMPSERVER_UPLOADS_BASE) # 基路径 使用path进行转通用路径
+    # 相对路径 年/月/日 uid/年/月/日
+    parentdir = Path('{}/{:%Y/%m/%d/%H}'.format(request.user.id, datetime.now())) # 进行格式化)
+    filename = Path(uuid.uuid4().hex)
+    # 目录在不在
+    (basedir / parentdir).mkdir(parents=True, exist_ok=True)
+    subdir = parentdir / filename
+    # (basedir / parentdir / filename).write_bytes(fileobj.read()) # 小文件
+    # 大文件按下面方式进行上传
+    with open(basedir / subdir, 'wb') as f:
+        for chunk in fileobj.chunks():
+            f.write(chunk)
+
+    return Response({ 'name': fileobj.name, 'url': str(subdir) })

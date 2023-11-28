@@ -106,12 +106,14 @@
                 <el-form-item label="私钥文件上传">
                     <el-upload
                         class="upload-demo"
-                        :action="`${this.$http.defaults.baseURL}jumpserver/orgs/`"
+                        :action="`${this.$http.defaults.baseURL}jumpserver/upload/`"
+                        :headers="getHeaders()"
                         :on-remove="handleRemove"
                         :before-remove="beforeRemove"
                         :limit="1"
                         :on-exceed="handleExceed"
                         :file-list="fileList"
+                        :on-success="handleSuccess"
                     >
                         <el-button size="small" type="primary">点击上传</el-button>
                         <div slot="tip" class="el-upload__tip">
@@ -120,12 +122,12 @@
                     </el-upload>
                 </el-form-item>
                 <el-form-item>
-                    <el-button @click="resetForm()">重置</el-button>
+                    <el-button @click="resetForm('addHost')">重置</el-button>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addHandleClose">取 消</el-button>
-                <el-button type="primary" @click="add()">确 定</el-button>
+                <el-button type="primary" @click="addHost()">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -140,8 +142,14 @@ export default {
         const validateIp = (rule, value, callback) => {
             const ipv4 = /^((\d|[1-9]\d|1\d\d|2([0-4]\d|5[0-5]))\.){4}$/
             const ipv6 = /^(([\da-fA-F]{1,4}):){8}$/
-            if (ipv4.test(value) || ipv6.test(value)) callback()
+            if (ipv4.test(value + '.') || ipv6.test(value + ':')) callback()
             else callback(new Error('IP地址不符合IPV6/IPV4协议'))
+        }
+
+        const validatePassOrPkey = (rule, value, callack) => {
+            if (value === '' && this.addHostForm.ssh_pkey_path === '')
+                callack(new Error('密码或者私钥至少提供一种!'))
+            else callack()
         }
 
         return {
@@ -167,6 +175,10 @@ export default {
             // 新增主机
             addHostForm: {
                 name: '',
+                ip: '',
+                username: '',
+                password: '',
+                ssh_pkey_path: '',
             },
             addHostRules: {
                 name: [
@@ -180,11 +192,11 @@ export default {
                 ],
                 username: [
                     { required: true, message: '请输入用户名称', trigger: 'blur' },
-                    { min: 4, max: 16, message: '用户名长度在 4 到 16 个字符', trigger: 'blur' },
+                    { min: 1, max: 16, message: '用户名长度在 1 到 16 个字符', trigger: 'blur' },
                 ],
                 password: [
-                    { required: true, message: '请输入用户密码', trigger: 'blur' },
-                    { min: 1, max: 16, message: '用户名长度在 4 到 16 个字符', trigger: 'blur' },
+                    { min: 4, max: 16, message: '用户名长度在 4 到 16 个字符', trigger: 'blur' },
+                    { validator: validatePassOrPkey, trigger: 'blur' },
                 ],
             },
             addHostDialogVisible: false,
@@ -192,6 +204,12 @@ export default {
         }
     },
     methods: {
+        // 获取头部token
+        getHeaders() {
+            return {
+                Authorization: 'Bearer' + ' ' + window.localStorage.getItem('token'),
+            }
+        },
         // 重置表单数据
         resetForm(name) {
             console.log(name)
@@ -321,6 +339,7 @@ export default {
         },
         handleRemove(file, fileList) {
             console.log(file, fileList)
+            this.fileList = []
         },
         handleExceed(files, fileList) {
             this.$message.warning(
@@ -335,8 +354,26 @@ export default {
         beforeRemove(file, fileList) {
             return this.$confirm(`确定移除 ${file.name}？`)
         },
+        handleSuccess(response, file, fileList) {
+            this.fileList = [response]
+            console.log(response.url, '----------------------')
+            this.addHostForm.ssh_pkey_path = response.url
+        },
         // 新增主机
-        addHost() {},
+        addHost() {
+            const name = 'addHost'
+            this.$refs[name].validate(async (valid) => {
+                if (valid) {
+                    const { data: response } = await this.$http.post(
+                        `jumpserver/hosts/`,
+                        this.addHostForm,
+                    )
+                    if (response.code) return this.$message.error(response.message)
+                    else this.$message.success('添加主机数据成功')
+                    this.addHostDialogVisible = false
+                }
+            })
+        },
     },
 }
 </script>
