@@ -13,6 +13,7 @@ from rest_framework.decorators import api_view, permission_classes
 from django.conf import settings
 from datetime import datetime
 import uuid
+from django.db.transaction import atomic
 
 class OrgViewSet(ModelViewSet):
     queryset = Organization.objects.filter(is_deleted=False)
@@ -65,14 +66,17 @@ class OrgViewSet(ModelViewSet):
             else:
                 break
 
-        self.get_queryset().filter(pk__in=target).update(is_deleted=True) # queryset.update()
-
+        # 绑定事务 保证两者必须是同时执行，有报错就都不执行
+        with atomic():
+            self.get_queryset().filter(pk__in=target).update(is_deleted=True) # queryset.update()
+            Host.objects.filter(org__in=target).update(is_deleted=True)
         return Response(status=204)
 
 class HostViewSet(ModelViewSet):
-    queryset = Host.objects.all()
+    queryset = Host.objects.filter(is_deleted=False).order_by('id')
     serializer_class = HostSerializer
     permission_classes = []
+    filterset_fields = ['org']
 
 # 给request注释一下类型
 @api_view(['POST'])

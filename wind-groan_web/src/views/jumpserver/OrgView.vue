@@ -8,11 +8,11 @@
         <!-- 组织树 -->
         <el-tree
             :data="dataList"
-            show-checkbox
             node-key="id"
             default-expand-all
             :expand-on-click-node="false"
             :props="defaultProps"
+            @node-click="handleNodeClick"
         >
             <span class="custom-tree-node" slot-scope="{ node, data }">
                 <span>{{ node.label }}</span>
@@ -54,6 +54,64 @@
                 </span>
             </span>
         </el-tree>
+        <el-card class="host-list">
+            <el-row :gutter="20">
+                <el-col :span="18">
+                    <el-input placeholder="请输入内容">
+                        <!-- 在模板中会传入时间对象event -->
+                        <el-button
+                            slot="append"
+                            icon="el-icon-search"
+                            @click="getList(1)"
+                        ></el-button>
+                    </el-input>
+                </el-col>
+                <el-col :span="6" class="add-col">
+                    <el-button type="primary" @click="addDialogVisible = true">添加用户</el-button>
+                </el-col>
+            </el-row>
+            <el-table
+                :data="hostList"
+                style="width: 100%"
+                :border="true"
+                stripe
+                v-loading="loading"
+                element-loading-text="拼命加载中"
+                element-loading-spinner="el-icon-loading"
+                element-loading-background="rgba(0, 0, 0, 0.8)"
+            >
+                <el-table-column type="index"></el-table-column>
+                <el-table-column prop="id" label="主机ID"></el-table-column>
+                <el-table-column prop="name" label="主机名称"></el-table-column>
+                <el-table-column prop="ip" label="主机IP"></el-table-column>
+                <el-table-column prop="username" label="用户名称"></el-table-column>
+                <el-table-column label="操作" fixed="right">
+                    <template #default="{ row }">
+                        <el-tooltip content="编辑" placement="bottom" effect="light">
+                            <el-button size="small" icon="el-icon-edit"></el-button>
+                        </el-tooltip>
+                        <el-tooltip content="分配权限" placement="bottom" effect="light">
+                            <el-button
+                                size="small"
+                                icon="el-icon-suitcase"
+                                @click="handleSetPerm(row)"
+                            ></el-button>
+                        </el-tooltip>
+                        <el-tooltip content="删除" placement="bottom" effect="light">
+                            <el-button type="danger" size="small" icon="el-icon-delete"></el-button>
+                        </el-tooltip>
+                    </template>
+                </el-table-column>
+            </el-table>
+
+            <!-- <el-pagination
+                @current-change="getList"
+                :current-page="pagination.page"
+                :page-size="pagination.size"
+                layout="total, prev, pager, next, jumper"
+                :total="pagination.total"
+            ></el-pagination> -->
+        </el-card>
         <!-- 增加资产组 -->
         <el-dialog
             :title="`${addForm.groupname}新增子分组`"
@@ -154,7 +212,7 @@ export default {
 
         return {
             serach: '',
-            // 数据显示
+            // 资产组数据显示
             dataList: [],
             loading: false,
             defaultProps: {
@@ -201,6 +259,8 @@ export default {
             },
             addHostDialogVisible: false,
             fileList: [],
+            // 资产主机列表
+            hostList: [],
         }
     },
     methods: {
@@ -212,8 +272,6 @@ export default {
         },
         // 重置表单数据
         resetForm(name) {
-            console.log(name)
-            console.log(this.$refs[name])
             this.$refs[name].resetFields()
         },
         // 获取用户列表数据
@@ -374,6 +432,35 @@ export default {
                 }
             })
         },
+        // 展示主机列表
+        handleNodeClick(data) {
+            const { id } = data // 组织的id
+            this.getHostList(1, id) // id
+        },
+        // 获取用户列表数据
+        async getHostList(page = 1, org) {
+            this.loading = true
+            if (typeof page !== 'number' || page <= 0) {
+                page = 1
+            }
+            try {
+                const { data: response } = await this.$http.get('jumpserver/hosts/', {
+                    params: {
+                        page,
+                        org,
+                    },
+                })
+                if (response.code) return this.$message.error(response.message)
+                this.hostList = response.results
+            } catch (error) {
+                this.$message({
+                    type: 'error',
+                    message: '用户未激活',
+                })
+            } finally {
+                this.loading = false
+            }
+        },
     },
 }
 </script>
@@ -381,7 +468,7 @@ export default {
 <style scoped lang="less">
 .el-tree {
     padding: 10px;
-    min-height: 400px;
+    min-height: 200px;
 }
 
 .custom-tree-node {
@@ -391,5 +478,14 @@ export default {
     justify-content: space-between;
     font-size: 14px;
     padding-right: 8px;
+}
+
+.host-list {
+    margin-top: 10px;
+}
+
+.add-col {
+    display: flex;
+    justify-content: flex-end;
 }
 </style>
