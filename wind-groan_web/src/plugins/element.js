@@ -30,6 +30,7 @@ import {
     Tree,
     Option,
     Select,
+    Upload,
 } from 'element-ui'
 import { Card, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
@@ -63,6 +64,7 @@ Vue.use(Footer)
 Vue.use(Tree)
 Vue.use(Select)
 Vue.use(Option)
+Vue.use(Upload)
 
 Vue.prototype.$message = Message
 Vue.prototype.$msgbox = MessageBox

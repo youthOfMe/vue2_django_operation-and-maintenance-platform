@@ -1,7 +1,9 @@
 from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
-from .serializers import OrgSerializer, Organization
+
+from .models import Host
+from .serializers import OrgSerializer, Organization, HostSerializer
 from rest_framework.decorators import action
 
 class OrgViewSet(ModelViewSet):
@@ -58,3 +60,8 @@ class OrgViewSet(ModelViewSet):
         self.get_queryset().filter(pk__in=target).update(is_deleted=True) # queryset.update()
 
         return Response(status=204)
+
+class HostViewSet(ModelViewSet):
+    queryset = Host.objects.all()
+    serializer_class = HostSerializer
+    permission_classes = []
