@@ -14,5 +14,3 @@ class CmdbConfig(AppConfig):
             from mongoengine import connect  # pymongo
             from mongoengine import connection
             connect(**settings.MONGODB_DATABASES)
-        print(connection._connections)  # 保护成员需要指定去找
-        print(connection._connection_settings)

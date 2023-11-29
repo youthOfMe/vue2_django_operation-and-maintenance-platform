@@ -13,6 +13,10 @@ const routes = [
         redirect: '/login',
     },
     {
+        path: '/jumpserver/webshell/:hostid',
+        component: () => import('@/views/jumpserver/WebShell.vue'),
+    },
+    {
         path: '/home',
         component: () => import('@/views/HomeVue.vue'),
         redirect: '/welcome',

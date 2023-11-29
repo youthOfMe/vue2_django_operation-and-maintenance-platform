@@ -1,4 +1,5 @@
 from django.db import models
+from User.models import UserProfile
 
 # Create your models here.
 class Organization(models.Model):
@@ -29,3 +30,18 @@ class Host(models.Model):
     ssh_pkey_path = models.CharField(null=True, blank=True, max_length=250, verbose_name='密钥的存储路径') # 使用私钥
     # 密钥存储在服务器端, 服务器代码内部使用
     is_deleted = models.BooleanField(default=False) # 逻辑删除
+
+class Track(models.Model):
+    class OPTYPES(models.IntegerChoices):
+        LOFIN = (1, '登录')
+        LOGOUT = (2, '登出')
+        COMMAND = (3, '命令')
+    class Meta:
+        db_table = 'js_track'
+    user = models.ForeignKey(UserProfile, models.PROTECT, db_column='user_id')
+    host = models.ForeignKey(Host, models.PROTECT, db_column='host_id')
+    source_ip = models.GenericIPAddressField() # ipv4 ipv6
+    op_date = models.DateTimeField(auto_now_add=True) # 新增的时候记录当前时间
+    op_type = models.IntegerField(choices=OPTYPES.choices)
+    command = models.CharField(null=True, blank=True, max_length=250, verbose_name='命令')
+    op_state = models.BooleanField(default=True, verbose_name='执行结果的状态值')

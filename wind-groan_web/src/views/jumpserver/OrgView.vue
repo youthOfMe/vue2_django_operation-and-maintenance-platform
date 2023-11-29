@@ -87,9 +87,16 @@
                 <el-table-column prop="username" label="用户名称"></el-table-column>
                 <el-table-column label="操作" fixed="right">
                     <template #default="{ row }">
-                        <el-tooltip content="编辑" placement="bottom" effect="light">
-                            <el-button size="small" icon="el-icon-edit"></el-button>
-                        </el-tooltip>
+                        <router-link
+                            class="to_webshell"
+                            :to="{ path: `/jumpserver/webshell/${row.id}` }"
+                            target="_blank"
+                        >
+                            <el-tooltip content="WebShell" placement="bottom" effect="light">
+                                <el-button size="small" icon="el-icon-monitor"></el-button>
+                            </el-tooltip>
+                        </router-link>
+
                         <el-tooltip content="分配权限" placement="bottom" effect="light">
                             <el-button
                                 size="small"
@@ -461,6 +468,10 @@ export default {
                 this.loading = false
             }
         },
+        // 进入WebShell
+        handleWebShellClick(id) {
+            this.$router.push(`/jumpserver/webshell/${id}`)
+        },
     },
 }
 </script>
@@ -487,5 +498,9 @@ export default {
 .add-col {
     display: flex;
     justify-content: flex-end;
+}
+
+.to_webshell .el-button {
+    margin-right: 10px;
 }
 </style>
