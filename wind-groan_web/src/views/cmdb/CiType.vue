@@ -38,17 +38,19 @@
                 <el-table-column label="操作" fixed="right">
                     <template #default="{ row }">
                         <el-tooltip content="编辑" placement="bottom" effect="light">
-                            <el-button size="small" icon="el-icon-edit"></el-button>
-                        </el-tooltip>
-                        <el-tooltip content="分配权限" placement="bottom" effect="light">
                             <el-button
                                 size="small"
-                                icon="el-icon-suitcase"
-                                @click="handleSetPerm(row)"
+                                icon="el-icon-edit"
+                                @click="handleEdit(row.id)"
                             ></el-button>
                         </el-tooltip>
                         <el-tooltip content="删除" placement="bottom" effect="light">
-                            <el-button type="danger" size="small" icon="el-icon-delete"></el-button>
+                            <el-button
+                                type="danger"
+                                size="small"
+                                icon="el-icon-delete"
+                                @click="handleDelete(row.id)"
+                            ></el-button>
                         </el-tooltip>
                     </template>
                 </el-table-column>
@@ -67,7 +69,7 @@
             title="新增资产组"
             :visible.sync="addDialogVisible"
             width="50%"
-            :before-close="addHandleClose"
+            :before-close="() => handleClose('add')"
         >
             <el-form
                 :model="addForm"
@@ -120,12 +122,41 @@
                     </el-card>
                 </el-form-item>
                 <el-form-item>
-                    <el-button @click="resetForm()">重置</el-button>
+                    <el-button @click="resetForm('add')">重置</el-button>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
-                <el-button @click="addHandleClose">取 消</el-button>
+                <el-button @click="handleClose('add')">取 消</el-button>
                 <el-button type="primary" @click="add()">确 定</el-button>
+            </span>
+        </el-dialog>
+        <!-- 编辑资产组 -->
+        <el-dialog
+            title="编辑资产组"
+            :visible.sync="editDialogVisible"
+            width="50%"
+            :before-close="() => handleClose('edit')"
+        >
+            <el-form
+                :model="editForm"
+                :rules="addRules"
+                ref="edit"
+                labal-width="600px"
+                class="demo-ruleForm"
+            >
+                <el-form-item label="资产组英文名称" prop="name">
+                    <el-input v-model="editForm.name"></el-input>
+                </el-form-item>
+                <el-form-item label="资产组中文名称" prop="label">
+                    <el-input v-model="editForm.label"></el-input>
+                </el-form-item>
+                <el-form-item label="资产组版本号" prop="version">
+                    <el-input v-model="editForm.version"></el-input>
+                </el-form-item>
+            </el-form>
+            <span slot="footer" class="dialog-footer">
+                <el-button @click="handleClose('edit')">取 消</el-button>
+                <el-button type="primary" @click="edit(editForm.id)">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -135,7 +166,6 @@
 export default {
     created() {
         this.getList()
-        console.log(this.addDialogVisible, 666)
     },
     data() {
         return {
@@ -155,7 +185,7 @@ export default {
             addRules: {
                 name: [
                     { required: true, message: '请输入英文名称', trigger: 'blur' },
-                    { min: 1, max: 16, message: '英文名称长度在 1 到 16 个字符', trigger: 'blur' },
+                    { min: 1, max: 26, message: '英文名称长度在 1 到 26个字符', trigger: 'blur' },
                 ],
                 label: [
                     { required: true, message: '请输入中文名称', trigger: 'blur' },
@@ -167,11 +197,20 @@ export default {
                 ],
                 // 记得补充校验规则 字段的
             },
+            // 编辑
+            editDialogVisible: false,
+            editForm: {
+                name: '',
+                label: '',
+                version: '',
+            },
         }
     },
     methods: {
         // 重置表单数据
         resetForm(name) {
+            console.log(name)
+            console.log(this.$refs[name])
             this.$refs[name].resetFields()
         },
         // 获取用户列表数据
@@ -201,7 +240,7 @@ export default {
             }
         },
         // 关闭输入框前提示
-        addHandleClose() {
+        handleClose(type) {
             this.$msgbox
                 .alert('取消后会导致当前填写的数据消失', '提示', {
                     confirmButtonText: '确定',
@@ -209,8 +248,20 @@ export default {
                     type: 'warning',
                 })
                 .then(() => {
-                    this.resetForm('add')
-                    this.addDialogVisible = false
+                    this.resetForm(type)
+                    switch (type) {
+                        case 'add':
+                            this.addForm.length = 0
+                            this.addDialogVisible = false
+                            break
+                        case 'edit':
+                            this.editForm.length = 0
+                            this.editDialogVisible = false
+                            break
+                        default:
+                            break
+                    }
+
                     this.$message({
                         type: 'info',
                         message: '已取消',
@@ -220,20 +271,16 @@ export default {
         },
         // 添加资产组数据
         add() {
-            console.log(this.addForm)
             this.$refs['add'].validate(async (valid, obj) => {
                 if (valid) {
                     const { data: response } = await this.$http.post('cmdb/citypes/', this.addForm) // 资产列表页进行新增
                     if (response.code) return this.$message.error(response.message)
                     this.addDialogVisible = false
                     this.resetForm('add')
+                    this.addForm.length = 0
                     this.getList()
                 }
             })
-        },
-        // 处理选择是否为必填字段
-        requiredChange(order, filed) {
-            console.log(order, filed)
         },
         // 添加资产组字段
         handleAddField() {
@@ -242,6 +289,54 @@ export default {
                 label: '',
                 type: '',
                 required: true,
+            })
+        },
+        // 删除资产数据
+        async handleDelete(id) {
+            this.$confirm('此操作将永久删除该资产类型, 是否继续', '警告', {
+                distinguishCancelAndClose: true,
+                confirmButtonText: '确定',
+                cancelButtonText: '取消',
+                type: 'error',
+            })
+                .then(async () => {
+                    const { data: response } = await this.$http.delete(`cmdb/citypes/${id}/`)
+                    if (response.code) return this.$message.error(response.message)
+                    this.getList(this.pagination.page)
+                    this.$message({
+                        type: 'success',
+                        message: '删除成功',
+                    })
+                })
+                .catch((action) => {
+                    console.log(action)
+                    this.$message({
+                        type: 'error',
+                        message: action,
+                    })
+                })
+        },
+        // 编辑资产组数据
+        async handleEdit(id) {
+            const { data: response } = await this.$http.get(`cmdb/citypes/${id}/`, {})
+            this.editForm = response
+            this.editDialogVisible = true
+            console.log(this.editForm)
+        },
+
+        async edit(id) {
+            this.$refs['edit'].validate(async (valid, obj) => {
+                if (valid) {
+                    const { data: response } = await this.$http.patch(
+                        `cmdb/citypes/${id}/`,
+                        this.editForm,
+                    ) // 资产列表页进行新增
+                    if (response.code) return this.$message.error(response.message)
+                    this.editDialogVisible = false
+                    this.resetForm('edit')
+                    this.editForm.length = 0
+                    this.getList()
+                }
             })
         },
     },
