@@ -47,6 +47,14 @@ class CiTypeViewSet(viewsets.ModelViewSet): # CRUD
         serializer = CiTypeWithFiledsSerializer(obj)
         return Response(serializer.data)
 
+    #增加字段
+    def create(self, request, *args, **kwargs):
+        serializer = CiTypeWithFiledsSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        self.perform_create(serializer)
+        headers = self.get_success_headers(serializer.data)
+        return Response(serializer.data, status=201, headers=headers)
+
 class CiViewSet(viewsets.ModelViewSet):
     queryset = Ci.objects()
     serializer_class = CiSerializer

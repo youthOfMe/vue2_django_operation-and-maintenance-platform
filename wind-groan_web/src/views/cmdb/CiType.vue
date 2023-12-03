@@ -25,6 +25,7 @@
                 :data="dataList"
                 style="width: 100%"
                 :border="true"
+                label-width="100px"
                 stripe
                 v-loading="loading"
                 element-loading-text="拼命加载中"
@@ -61,9 +62,9 @@
                 :total="pagination.total"
             ></el-pagination>
         </el-card>
-        <!-- 增加资产 -->
+        <!-- 增加资产组 -->
         <el-dialog
-            title="新增角色"
+            title="新增资产组"
             :visible.sync="addDialogVisible"
             width="50%"
             :before-close="addHandleClose"
@@ -72,9 +73,52 @@
                 :model="addForm"
                 :rules="addRules"
                 ref="add"
-                labal-width="100px"
+                labal-width="600px"
                 class="demo-ruleForm"
             >
+                <el-form-item label="资产组英文名称" prop="name">
+                    <el-input v-model="addForm.name"></el-input>
+                </el-form-item>
+                <el-form-item label="资产组中文名称" prop="label">
+                    <el-input v-model="addForm.label"></el-input>
+                </el-form-item>
+                <el-form-item label="资产组版本号" prop="version">
+                    <el-input v-model="addForm.version"></el-input>
+                </el-form-item>
+                <!-- 根据上面选择类型 动态增加表单项 -->
+                <el-form-item label="添加资产字段">
+                    <el-button
+                        icon="el-icon-plus"
+                        plain
+                        type="success"
+                        size="mini"
+                        @click="handleAddField()"
+                    ></el-button>
+                </el-form-item>
+                <el-form-item
+                    v-for="(field, cmIndex) in addForm.fields"
+                    label="资产组字段"
+                    :key="cmIndex"
+                    props="fileds"
+                >
+                    <el-card>
+                        <el-form-item label="英文名" prop="name">
+                            <el-input v-model="field.name"></el-input>
+                        </el-form-item>
+                        <el-form-item label="中文名" prop="label">
+                            <el-input v-model="field.label"></el-input>
+                        </el-form-item>
+                        <el-form-item label="字段类型" prop="type">
+                            <el-input v-model="field.type"></el-input>
+                        </el-form-item>
+                        <el-form-item label="是否必填" prop="required">
+                            <el-switch v-model="field.required"></el-switch>
+                        </el-form-item>
+                        <!-- <el-form-item label="是否必须" prop="required">
+                            <el-input v-model="field.required"></el-input>
+                        </el-form-item> -->
+                    </el-card>
+                </el-form-item>
                 <el-form-item>
                     <el-button @click="resetForm()">重置</el-button>
                 </el-form-item>
@@ -102,8 +146,27 @@ export default {
             loading: false,
             // 新增
             addDialogVisible: false,
-            addForm: {},
-            addRules: {},
+            addForm: {
+                name: '',
+                label: '',
+                version: '',
+                fields: [],
+            },
+            addRules: {
+                name: [
+                    { required: true, message: '请输入英文名称', trigger: 'blur' },
+                    { min: 1, max: 16, message: '英文名称长度在 1 到 16 个字符', trigger: 'blur' },
+                ],
+                label: [
+                    { required: true, message: '请输入中文名称', trigger: 'blur' },
+                    { min: 1, max: 16, message: '中文名称长度在 1 到 16 个字符', trigger: 'blur' },
+                ],
+                version: [
+                    { required: true, message: '请输入版本名', trigger: 'blur' },
+                    { min: 1, max: 16, message: '版本必须在1-16版本', trigger: 'blur' },
+                ],
+                // 记得补充校验规则 字段的
+            },
         }
     },
     methods: {
@@ -155,18 +218,30 @@ export default {
                 })
                 .catch(() => {})
         },
-        // 添加用户数据
+        // 添加资产组数据
         add() {
+            console.log(this.addForm)
             this.$refs['add'].validate(async (valid, obj) => {
-                console.log(valid, obj)
                 if (valid) {
-                    const { data: response } = await this.$http.post('users/mgr/', this.addForm)
+                    const { data: response } = await this.$http.post('cmdb/citypes/', this.addForm) // 资产列表页进行新增
                     if (response.code) return this.$message.error(response.message)
+                    this.addDialogVisible = false
+                    this.resetForm('add')
+                    this.getList()
                 }
-                // 成功
-                this.addDialogVisible = false
-                // 拿回数据
-                this.getList()
+            })
+        },
+        // 处理选择是否为必填字段
+        requiredChange(order, filed) {
+            console.log(order, filed)
+        },
+        // 添加资产组字段
+        handleAddField() {
+            this.addForm.fields.push({
+                name: '',
+                label: '',
+                type: '',
+                required: true,
             })
         },
     },

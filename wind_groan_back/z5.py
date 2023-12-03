@@ -17,6 +17,7 @@ from paramiko.client import SSHClient
 # from sesame.utils import get_user
 from websockets.frames import CloseCode
 
+print('------------------z5------------启动成功')
 
 @sync_to_async # get_user = sync_to_async(get_user) sync_to_async包装玩后的get_user签名和原函数应该是一样的
 def get_user(jwtauth, validated_token):

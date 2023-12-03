@@ -2,7 +2,6 @@
     <el-container>
         <el-header>
             <div class="logo">
-                <img src="../assets/logo.png" alt="logo" />
                 <div class="title">风吟运维管理平台</div>
                 <i
                     :class="isCollapse ? 'el-icon-s-unfold' : 'el-icon-s-fold'"
@@ -10,7 +9,6 @@
                 ></i>
             </div>
             <div class="info">
-                <el-button type="primary" @click="logout">退出</el-button>
                 <el-dropdown @command="handleCommand">
                     <span class="el-dropdown-link">
                         {{ user.username }}

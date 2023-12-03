@@ -255,7 +255,7 @@ export default {
         },
         // 资产类型选项变化
         async handleCiTypeChange(id) {
-            // console.log(this.addForm.citype, args, '############')
+            console.log(this.addForm.citype, '############')
             const { data: response } = await this.$http.get(`cmdb/citypes/${id}/`) // 详情页
             if (response.code) return this.$message.error(response.message)
             this.addForm.name = response.name
@@ -269,6 +269,7 @@ export default {
         },
         //
         async handleAddChild(currentField) {
+            console.log(this.addForm.citype, '############')
             console.log(currentField)
             console.log(currentField.type.split(':'))
             const [, name, version = 1] = currentField.type.split(':')

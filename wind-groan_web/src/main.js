@@ -4,6 +4,7 @@ import router from './router' // 静态路由
 import './plugins/element.js' // 按需导入文件 不需要就不要了
 import '@/assets/css/main.css'
 import axios from 'axios'
+import 'element-ui/lib/theme-chalk/display.css'
 
 Vue.prototype.$http = axios
 

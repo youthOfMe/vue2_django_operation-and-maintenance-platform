@@ -31,6 +31,9 @@ import {
     Option,
     Select,
     Upload,
+    Carousel,
+    CarouselItem,
+    Image,
 } from 'element-ui'
 import { Card, Breadcrumb, BreadcrumbItem } from 'element-ui'
 
@@ -65,6 +68,9 @@ Vue.use(Tree)
 Vue.use(Select)
 Vue.use(Option)
 Vue.use(Upload)
+Vue.use(Carousel)
+Vue.use(CarouselItem)
+Vue.use(Image)
 
 Vue.prototype.$message = Message
 Vue.prototype.$msgbox = MessageBox
