@@ -42,7 +42,11 @@
                 <el-table-column label="操作" fixed="right">
                     <template #default="{ row }">
                         <el-tooltip content="编辑" placement="bottom" effect="light">
-                            <el-button size="small" icon="el-icon-edit"></el-button>
+                            <el-button
+                                size="small"
+                                icon="el-icon-edit"
+                                @click="handleEdit(row.id)"
+                            ></el-button>
                         </el-tooltip>
                         <el-tooltip content="分配权限" placement="bottom" effect="light">
                             <el-button
@@ -164,7 +168,7 @@
             </el-form>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="addHandleClose">取 消</el-button>
-                <el-button type="primary" @click="add()">确 定</el-button>
+                <el-button type="primary" @click="editFlag ? edit() : add()">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -194,6 +198,8 @@ export default {
             addRules: {
                 citype: [{ required: true, message: '请选择资产类型', trigger: 'blur' }],
             },
+            // 编辑
+            editFlag: false,
         }
     },
     methods: {
@@ -239,10 +245,12 @@ export default {
                 .then(() => {
                     this.resetForm('add')
                     this.addDialogVisible = false
+                    this.addForm.length = 0
                     this.$message({
                         type: 'info',
                         message: '已取消',
                     })
+                    this.editFlag = false
                 })
                 .catch(() => {})
         },
@@ -261,17 +269,12 @@ export default {
             this.addForm.name = response.name
             this.addForm.label = response.label
             this.addForm.version = response.version
-
-            console.log(response.fields)
             // 进行响应式给对象绑定数据
             this.$set(this.addForm, 'fields', response.fields)
             // this.addForm.fields = response.fields
         },
         //
         async handleAddChild(currentField) {
-            console.log(this.addForm.citype, '############')
-            console.log(currentField)
-            console.log(currentField.type.split(':'))
             const [, name, version = 1] = currentField.type.split(':')
             const { data: response } = await this.$http.get(`cmdb/citypes/${name}/${version}/`) // 详情页
             if (response.code) return this.$message.error(response.message)
@@ -280,20 +283,41 @@ export default {
                 this.$set(currentField, 'children', [])
             }
             currentField.children.push(response)
-            console.log(this.addForm)
         },
-        // 添加用户数据
+        // 封装发送请求的清空数据
+        postEnd() {
+            this.addDialogVisible = false
+            this.addForm.length = 0
+            this.resetForm('add')
+            this.getList()
+        },
+        // 添加资产数据
         add() {
             this.$refs['add'].validate(async (valid, obj) => {
-                console.log(valid, obj)
                 if (valid) {
-                    console.log(this.addForm)
                     const { data: response } = await this.$http.post('cmdb/cis/', this.addForm) // 资产列表页进行新增
-                    console.log(response)
                     if (response.code) return this.$message.error(response.message)
-                    this.addDialogVisible = false
-                    this.resetForm('add')
-                    this.getList()
+                    this.postEnd()
+                }
+            })
+        },
+        // 修改资产数据
+        async handleEdit(id) {
+            const { data: response } = await this.$http.get(`cmdb/cis/${id}/`, {})
+            this.addDialogVisible = true
+            this.addForm = response
+            this.editFlag = true
+        },
+        async edit() {
+            this.$refs['add'].validate(async (valid, obj) => {
+                if (valid) {
+                    const { id } = this.addForm
+                    delete this.addForm.id
+                    const { data: response } = await this.$http.put(`cmdb/cis/${id}/`, this.addForm) // 资产列表页进行新增
+                    if (response.code) return this.$message.error(response.message)
+                    console.log(response)
+                    this.postEnd()
+                    this.editFlag = false
                 }
             })
         },
